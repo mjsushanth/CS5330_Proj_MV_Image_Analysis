@@ -1,0 +1,433 @@
+New Approach:
+
+## ------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+# PHASE 0;
+
+# CUDA and CUDNN Setup.
+# Pre Requisites: Install CUDA 12.1 and Install CuDNN 9.1.0, for windows.
+# If other versions are chosen, their paths are to be checked thoroughly and the compatibility matrix on ReadME/Install pages for pytorch is to be checked.
+
+# After installing, follow these steps.
+
+# Create directories if they don't exist - This is most likely not needed. The directories are formed.
+mkdir "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.1\include" 2>nul
+mkdir "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.1\lib\x64" 2>nul
+mkdir "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.1\bin" 2>nul
+
+# Copy files (contents only, not folders)
+copy "C:\Program Files\NVIDIA\CUDNN\v9.1\include\12.4\cudnn*.h" "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.1\include\"
+copy "C:\Program Files\NVIDIA\CUDNN\v9.1\lib\12.4\x64\cudnn*.lib" "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.1\lib\x64\"
+copy "C:\Program Files\NVIDIA\CUDNN\v9.1\bin\12.4\cudnn*.dll" "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.1\bin\"
+
+
+# Verify the copies were successful
+echo Verifying copies...
+echo.
+echo Include files:
+dir "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.1\include\cudnn*.h"
+echo.
+echo Library files:
+dir "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.1\lib\x64\cudnn*.lib"
+echo.
+echo DLL files:
+dir "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.1\bin\cudnn*.dll"
+
+
+# In your VSCode CMD or Normal CMD, # Verify these.
+  nvidia-smi 
+  nvcc --version
+
+# Note: All this should be done in VSCODE developer command prompt; preferred vscode 19 2016
+# ** Visual Studio 2019 Developer Command Prompt v16.11.41.
+
+# Install VS and make sure 'Desktop Development tools with C++' is selected, install those as they are an important dependancy.
+
+
+# ------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+# ETH3D Environment Setup Guide
+# Compatible with:
+# - Python 3.10
+# - PyTorch 2.4.1
+# - CUDA 12.1
+# - cuDNN 9.1.0.70
+
+
+# pytorch , python, c++, stable cuda - cudnn, ROCm.
+# 2.4 >=3.8, <=3.12 C++17 CUDA 11.8, CUDA 12.1, CUDNN 9.1.0.70, ROCm 6.1
+
+
+# 1. Clean previous environment (if exists)
+conda deactivate
+conda env remove -n eth3d_reconstruction
+conda clean --all --yes
+
+# 2. Base Environment Creation
+cd "C:\Users\joems\OneDrive\Desktop\MLCV Project Items\Comp Vision CS 5330"
+conda create -n eth3d_reconstruction python=3.10 -y
+conda activate eth3d_reconstruction
+
+# 3. Environment Variables Setup
+set CUDA_HOME=C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.1
+set CUDA_PATH=%CUDA_HOME%
+set PATH=C:\Program Files\NVIDIA\CUDNN\v9.1\bin\12.4;%PATH%
+set PATH=C:\Program Files\NVIDIA\CUDNN\v9.1\lib\12.4\x64;%PATH%
+set PATH=%CUDA_HOME%\bin;%PATH%
+
+# This depends on your gpu model; so search online and find the compute capability number. 
+set TORCH_CUDA_ARCH_LIST=8.6
+set CONDA_ALWAYS_YES=true
+
+
+# 4. Install Mamba for faster package management
+conda install mamba -n base -c conda-forge -y
+
+
+# 5. Core Scientific Stack (Foundation)
+mamba install -c conda-forge ^
+    numpy scipy pandas ^
+    matplotlib seaborn plotly ^
+    tqdm h5py ^
+    cmake ninja ^
+    mkl=2023.1.0 ^
+    -y
+
+
+# 6. PyTorch Stack (using pip for better version control)
+pip3 install torch==2.4.1 torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
+
+
+# 7. Build Dependencies
+mamba install -c conda-forge ^
+    eigen ^
+    ceres-solver ^
+    glog ^
+    gflags ^
+    -y
+
+
+# 7.1 Jupyter lab.
+mamba install -c conda-forge jupyterlab jupyterlab-git jupyterlab-lsp python-lsp-server jupyterlab_widgets ipywidgets ipyparallel ipykernel -y
+
+
+# 8. Install Remaining Conda Packages
+mamba install -c conda-forge ^
+    blas=*=mkl lapack ^
+    -y
+
+
+# 8.1. Missing ? Do a check.
+
+mamba list | findstr vtk
+mamba list | findstr blas
+mamba list | findstr lapack
+mamba list | findstr ceres
+mamba list | findstr glog
+mamba list | findstr gflags
+
+# 9. VTK Installation Recommendation
+# Removed VTK from Conda dependencies to handle via pip to prevent conflicts
+
+# 10. Install Remaining Pip Packages
+pip install vtk==9.2.6 pyvista
+pip install pymeshlab open3d iopath fvcore moviepy rich pyopengl pyopengl-accelerate PyYAML pyglet jsonschema
+
+
+# 11. Handle CuPy Installation
+# Remove CuPy if installed via Conda
+conda remove -y cupy
+
+# Install CuPy with CUDA 12.1 support via pip
+pip install cupy-cuda12x==13.3.0
+
+
+
+# 11.5 Installing pip openCV.
+
+cd "C:\Users\joems\OneDrive\Desktop\MLCV Project Items\Comp Vision CS 5330"
+conda activate eth3d_reconstruction
+
+# if present already.
+pip uninstall -y opencv-python opencv-contrib-python
+
+conda list opencv
+
+# option 2; pip is second preference.
+# do a test after the full environment setup; and if you face a strong ABI / incompatibility error about numpy cv conflict, use conda.
+
+pip install opencv-python==4.5.5.64 opencv-contrib-python==4.5.5.64
+
+
+# option 1; conda is best preference.
+conda install -c conda-forge opencv
+
+--> the reason you need to experiment is, pip comes with its own wheels / packaged binaries for openCV where it doesnt consider broader conflicts and broader dependencies of the whole environment. sometimes, conda refuses to install openCV saying a particular dependency tree cant be solved. in such cases, we have to have a mixed installaion and pip should cover things up.
+
+## ------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+## Step-by-step outline to install PyTorch3D on your setup, incorporating analysis and ensuring we’re in the correct environment for each phase. 
+
+---
+
+### 1. Initial Setup and Repository Cloning (Miniconda Prompt)
+
+1. **Open Miniconda Prompt** and initialize Conda:
+   
+conda init
+   
+   - **Close** and **reopen** the Miniconda Prompt after running `conda init`.
+
+2. **Activate your Conda environment**:
+   
+conda activate eth3d_reconstruction
+   
+
+3. **Set Miniconda Scripts in the PATH temporarily**:
+4. **Clone the PyTorch3D repository**:
+5. **Navigate to the PyTorch3D directory**:
+6. **Pull the latest changes** (optional but recommended):
+
+set PATH=C:\Users\joems\miniconda3\Scripts;%PATH%
+   
+cd C:\Users\joems\Projects
+git clone https://github.com/facebookresearch/pytorch3d.git
+   
+cd pytorch3d
+   
+git pull origin main
+   
+
+
+### 2. Set Environment Variables (VS Code Developer Command Prompt)
+
+1. **Open the VS Code Developer Command Prompt for VS 2019**.
+2. **Navigate to the PyTorch3D directory**:
+3. **Activate your Conda environment in the same prompt**:
+
+
+cd C:\Users\joems\Projects\pytorch3d
+conda activate eth3d_reconstruction
+   
+
+4. **Set CUDA Architecture and CUDA Path**:
+   - Since your GPU (RTX 3080) has a compute capability of 8.6:
+5. **Add Conda Library bin to PATH temporarily**:
+6. **Check `ctypes` compatibility**:
+
+
+set TORCH_CUDA_ARCH_LIST=8.6
+set CUDA_HOME=C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.1
+set CUDA_PATH=%CUDA_HOME%
+   
+set PATH=C:\Users\joems\miniconda3\Library\bin;%PATH%
+   
+python -c "import ctypes; print('ctypes loaded successfully')"
+   
+
+
+
+### 3. Prepare the Environment for Building PyTorch3D (VS Code Developer Command Prompt)
+
+1. **Ensure required packages are installed or updated**: -> Note, they have already been installed above.
+2. **Set additional environment variables for building**:
+3. **Clean Previous Build Files**:
+   - If you have previously built PyTorch3D, clean up old build files to avoid conflicts:
+   
+
+pip install fvcore iopath
+      
+set DISTUTILS_USE_SDK=1
+set PYTORCH3D_NO_NINJA=1
+set MAX_JOBS=4
+   
+python setup.py clean
+rmdir /S /Q build
+rmdir /S /Q dist
+rmdir /S /Q pytorch3d.egg-info
+   
+
+4. **Verify `link.exe` from VS Build Tools**:
+   - In the Miniconda environment, Conda’s `link.exe` can conflict with the MSVC linker. We’ll temporarily rename it to ensure only the MSVC linker is used:
+   - If your virtual env doesnt have a link, then feel free to ignore this part.
+
+cd C:\Users\joems\miniconda3\envs\eth3d_reconstruction\Library\usr\bin
+rename link.exe link_bak.exe
+
+
+
+
+### 4. Compile and Install PyTorch3D (VS Code Developer Command Prompt)
+
+1. **Return to the PyTorch3D directory**:
+   
+cd C:\Users\joems\Projects\pytorch3d
+   
+
+2. **Set Visual Studio Paths and Configure**:
+   - Ensure Visual Studio 2019 paths are included for compatibility:
+   
+set VS2019_PATH="C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools"
+set PATH=%VS2019_PATH%\VC\Tools\MSVC\14.29.30133\bin\Hostx64\x64;%PATH%
+   
+
+3. **Verify the correct linker is in use**:
+   
+where link.exe
+   
+   - This should point to the MSVC linker within Visual Studio 2019’s toolchain.
+
+4. **Install PyTorch3D**:
+   
+python setup.py install
+   
+
+### 5. Verify Installation and Restore Environment
+
+1. **Restore the original `link.exe`** (in case Conda tools need it):
+   
+cd C:\Users\joems\miniconda3\envs\eth3d_reconstruction\Library\usr\bin
+rename link_bak.exe link.exe
+   
+
+2. **Run verification commands**:
+   - Basic check for PyTorch3D version:
+     
+python -c "import pytorch3d; print(f'PyTorch3D version: {pytorch3d.__version__}')"
+     
+
+   # - Full verification, checking PyTorch, CUDA, and GPU availability:
+     
+python -c "import torch; import pytorch3d; print(f'PyTorch version: {torch.__version__}\nPyTorch3D version: {pytorch3d.__version__}\nCUDA Available: {torch.cuda.is_available()}\nCUDA Version: {torch.version.cuda}\nGPU Device: {torch.cuda.get_device_name(0) if torch.cuda.is_available() else \"No GPU\"}')"
+     
+python -c "import torch; from pytorch3d.structures import Meshes; print('PyTorch3D Meshes Module Imported Successfully')"
+
+
+
+
+
+## ------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+## Create and Configure Jupyter Kernel for the Environment
+
+1. **Install Jupyter kernel and notebook requirements**: OPTIONAL: notice dependencies, it already includes this stuff.
+   
+conda install -y ipykernel jupyter jupyterlab notebook
+   
+
+2. **Create a kernel for the `eth3d_reconstruction` environment**:
+
+
+jupyter kernelspec uninstall eth3d_reconstruction
+   
+python -m ipykernel install --user --name eth3d_reconstruction --display-name "Python (eth3d_reconstruction)"
+   
+
+## ------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+## for launching: ! 
+cd "C:\Users\joems\OneDrive\Desktop\MLCV Project Items\Comp Vision CS 5330"
+jupyter lab
+
+
+
+## ------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+# 9. Verification Commands
+# 9.1. CUDA and cuDNN Check
+# 9.2. PyTorch and CUDA Check
+# 9.3. Full System Check, CuPy Check.
+
+cd "C:\Users\joems\OneDrive\Desktop\MLCV Project Items\Comp Vision CS 5330"
+conda activate eth3d_reconstruction
+
+
+python -c "import ctypes; print('ctypes loaded successfully')"
+
+python -c "import ctypes; print(f'cuDNN: {\"OK\" if ctypes.CDLL(\"C:/Program Files/NVIDIA/CUDNN/v9.1/bin/12.4/cudnn64_9.dll\") else \"Failed\"}')"
+
+
+python -c "import torch; print(f'PyTorch Version: {torch.__version__}\nCUDA Available: {torch.cuda.is_available()}\nCUDA Version: {torch.version.cuda}\nGPU Device: {torch.cuda.get_device_name(0) if torch.cuda.is_available() else \"No GPU available\"}\nNumber of GPUs: {torch.cuda.device_count()}')"
+
+python -c "import torch; print(f'PyTorch: {torch.__version__}\nCUDA: {torch.version.cuda} (Available: {torch.cuda.is_available()})\nGPU: {torch.cuda.get_device_name(0) if torch.cuda.is_available() else \"None\"}')"
+
+python -c "import sys, torch, platform, ctypes, os; print(f'\n=== System & CUDA Check ===\nPython: {platform.python_version()}\nPyTorch: {torch.__version__}\nCUDA Available: {torch.cuda.is_available()}\nCUDA Version: {torch.version.cuda}\nGPU: {torch.cuda.get_device_name(0) if torch.cuda.is_available() else \"No GPU\"}\nGPU Count: {torch.cuda.device_count()}\nCompute Capability: {torch.cuda.get_device_properties(0).major}.{torch.cuda.get_device_properties(0).minor if torch.cuda.is_available() else \"N/A\"}\n\n=== CUDA Test ==='); test_tensor = torch.randn(1000, 1000).cuda() if torch.cuda.is_available() else None; test_result = torch.matmul(test_tensor, test_tensor) if test_tensor is not None else None; print('✓ CUDA Operations: Matrix Multiplication Successful' if test_result is not None else '❌ CUDA Test Failed'); del test_tensor, test_result; torch.cuda.empty_cache(); print(f'\n=== Environment ===\nCUDA_HOME: {os.environ.get(\"CUDA_HOME\", \"Not Set\")}\nCUDA_PATH: {os.environ.get(\"CUDA_PATH\", \"Not Set\")}\ncuDNN: {\"✓ Loaded OK\" if ctypes.CDLL(\"C:/Program Files/NVIDIA/CUDNN/v9.1/bin/12.4/cudnn64_9.dll\") else \"❌ Failed\"}\nGPU Memory: {torch.cuda.get_device_properties(0).total_memory/1024**3:.1f} GB')"
+
+
+python -c "import cupy as cp; print(f'CuPy Version: {cp.__version__}\nCUDA Available: {cp.is_available()}\nCUDA Device: {cp.cuda.runtime.getDeviceProperties(0)[\"name\"] if cp.is_available() else \"No GPU available\"}\nCUDA Version: {cp.cuda.runtime.runtimeGetVersion() // 1000}.{(cp.cuda.runtime.runtimeGetVersion() % 100) // 10}')"
+
+
+## ------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+## COLMAP INSTALLATION:
+
+## Done so far and a success? Lets save a backup.
+conda env export -n eth3d_reconstruction > eth3d_recon_1105.yml
+
+
+## Cloning:
+
+conda deactivate
+conda create --name eth3d_reconstruction_backup --clone eth3d_reconstruction
+conda activate eth3d_reconstruction_backup
+conda list
+conda deactivate
+
+
+# Verify:
+C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.1\lib\x64\cudart.lib
+C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.1\lib\x64\cuda.lib
+
+
+conda install colmap=3.10=cpuh3420c36_1
+
+conda list qt
+conda list glew
+conda list freeimage
+conda list flann
+
+mamba install -c conda-forge glew freeimage flann -y
+mamba install -c conda-forge boost -y
+mamba install -c conda-forge cgal
+
+mamba install -c conda-forge qt=5.15 -y
+conda install -c conda-forge qt6-base qt6-widgets qt6-opengl -y
+
+mamba install -c conda-forge skimage
+
+
+# keep it flexible. dont choose a specific build.
+
+conda install colmap=3.10 
+
+# list for colmap and see it.
+
+conda list colmap
+
+# python bindings for colmap, install them.
+
+pip install pycolmap
+
+pip show pycolmap
+
+
+# check the version.
+
+colmap --version
+
+
+# saving your YML file.
+
+cd "C:\Users\joems\OneDrive\Desktop\MLCV Project Items\Comp Vision CS 5330"
+conda activate eth3d_reconstruction
+
+conda env export --name eth3d_reconstruction --file eth3d_reconstruction_backupv1.yml
+conda env export -n eth3d_reconstruction > eth3d_recon_1105_7AM.yml
+
+
+## ------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+

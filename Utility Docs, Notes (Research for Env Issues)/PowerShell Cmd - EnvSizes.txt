@@ -1,0 +1,13 @@
+Get-ChildItem C:\Users\joems\miniconda3\envs -Directory | ForEach-Object {
+    $size = (Get-ChildItem $_.FullName -Recurse | Measure-Object -Property Length -Sum).Sum / 1GB
+    [PSCustomObject]@{
+        Environment = $_.Name
+        "Size(GB)" = [math]::Round($size, 2)
+    }
+}
+
+
+minconda package wise size:
+
+
+conda list -n eth3d_reconstruction --explicit > eth3d_packages.txt

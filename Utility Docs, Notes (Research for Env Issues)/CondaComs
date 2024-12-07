@@ -1,0 +1,744 @@
+CondaComs
+
+**Providing Conda Utility Commands and an "Always Yes" Option**
+
+---
+
+**Hello!**
+
+I understand that managing Conda environments and packages efficiently is crucial for your development workflow, especially when dealing with complex projects like building OpenCV with multiple dependencies. Below, I’ll address your two requests:
+
+1. **How to Automatically Answer "Yes" in Conda Commands**
+2. **A Comprehensive Conda Cheat Sheet**
+
+---
+
+### **1. Automatically Answer "Yes" in Conda Commands**
+
+When performing operations that prompt for confirmation (e.g., installing or removing packages), you can bypass these prompts by using the `-y` or `--yes` flag. This is particularly useful for scripting or automating your environment setup.
+
+**Usage Examples:**
+
+- **Install a Package:**
+  ```bash
+  conda install -y package_name
+  ```
+  **Example:**
+  ```bash
+  conda install -y numpy
+  ```
+
+- **Remove a Package:**
+  ```bash
+  conda remove -y package_name
+  ```
+  **Example:**
+  ```bash
+  conda remove -y scipy
+  ```
+
+- **Update a Package:**
+  ```bash
+  conda update -y package_name
+  ```
+  **Example:**
+  ```bash
+  conda update -y pandas
+  ```
+
+- **Create an Environment:**
+  ```bash
+  conda create -n env_name package1 package2 -y
+  ```
+  **Example:**
+  ```bash
+  conda create -n my_env python=3.10 numpy pandas -y
+  ```
+
+- **Clean Conda Cache:**
+  ```bash
+  conda clean --all -y
+  ```
+
+**Note:** Using the `-y` flag can be risky if you're not certain about the changes being made, as it will proceed without confirmation. Always ensure that you understand the implications of the commands you execute.
+
+---
+
+### **2. Comprehensive Conda Cheat Sheet**
+
+Below is an extensive cheat sheet covering a wide range of Conda commands, from basic to advanced utilities. This should serve as a valuable reference for managing your Conda environments and packages effectively.
+
+---
+
+#### **A. Environment Management**
+
+1. **Create a New Environment:**
+   ```bash
+   conda create -n env_name [packages] [options]
+   ```
+   **Example:**
+   ```bash
+   conda create -n my_env python=3.10 numpy pandas
+   ```
+
+2. **Activate an Environment:**
+   ```bash
+   conda activate env_name
+   ```
+   **Example:**
+   ```bash
+   conda activate my_env    
+   ```
+
+3. **Deactivate the Current Environment:**
+   ```bash
+   conda deactivate
+   ```
+
+4. **List All Environments:**
+   ```bash
+   conda env list
+   ```
+   or
+   ```bash
+   conda info --envs
+   ```
+
+5. **Remove an Environment:**
+   ```bash
+   conda env remove -n env_name
+   ```
+   **Example:**
+   ```bash
+   conda env remove -n my_env
+   ```
+
+6. **Clone an Environment:**
+   ```bash
+   conda create --name new_env_name --clone old_env_name
+   ```
+   **Example:**
+   ```bash
+   conda create --name cloned_env --clone my_env
+   ```
+
+7. **Export an Environment to a YAML File:**
+   ```bash
+   conda env export > environment.yml
+   ```
+   **With Specified Channels:**
+   ```bash
+   conda env export --from-history > environment.yml
+   ```
+
+8. **Create an Environment from a YAML File:**
+   ```bash
+   conda env create -f environment.yml
+   ```
+
+9. **Update an Environment from a YAML File:**
+   ```bash
+   conda env update -n env_name -f environment.yml
+   ```
+
+10. **List Installed Packages in the Current Environment:**
+    ```bash
+    conda list
+    ```
+
+11. **List Installed Packages in a Specific Environment:**
+    ```bash
+    conda list -n env_name
+    ```
+
+---
+
+#### **B. Package Management**
+
+1. **Install a Package:**
+   ```bash
+   conda install package_name
+   ```
+   **Example:**
+   ```bash
+   conda install matplotlib
+   ```
+
+2. **Install Multiple Packages:**
+   ```bash
+   conda install package1 package2 package3
+   ```
+   **Example:**
+   ```bash
+   conda install scipy seaborn
+   ```
+
+3. **Install a Specific Version of a Package:**
+   ```bash
+   conda install package_name=version
+   ```
+   **Example:**
+   ```bash
+   conda install numpy=1.21.0
+   ```
+
+4. **Install a Package from a Specific Channel:**
+   ```bash
+   conda install -c channel_name package_name
+   ```
+   **Example:**
+   ```bash
+   conda install -c conda-forge opencv
+   ```
+
+5. **Update a Package:**
+   ```bash
+   conda update package_name
+   ```
+   **Example:**
+   ```bash
+   conda update pandas
+   ```
+
+6. **Update All Packages in the Current Environment:**
+   ```bash
+   conda update --all
+   ```
+
+7. **Remove a Package:**
+   ```bash
+   conda remove package_name
+   ```
+   **Example:**
+   ```bash
+   conda remove scikit-learn
+   ```
+
+8. **Search for Packages:**
+   ```bash
+   conda search package_name
+   ```
+   **Example:**
+   ```bash
+   conda search tensorflow
+   ```
+
+9. **List All Installed Packages:**
+   ```bash
+   conda list
+   ```
+
+10. **List Packages from a Specific Channel:**
+    ```bash
+    conda list -c channel_name
+    ```
+
+11. **Find Which Package Installed a File:**
+    ```bash
+    conda list --explicit | grep file_name
+    ```
+    **Example:**
+    ```bash
+    conda list --explicit | grep hdf5
+    ```
+
+---
+
+#### **C. Channel Management**
+
+1. **Add a Channel:**
+   ```bash
+   conda config --add channels channel_name
+   ```
+   **Example:**
+   ```bash
+   conda config --add channels conda-forge
+   ```
+
+2. **Remove a Channel:**
+   ```bash
+   conda config --remove channels channel_name
+   ```
+   **Example:**
+   ```bash
+   conda config --remove channels conda-forge
+   ```
+
+3. **List All Channels:**
+   ```bash
+   conda config --show channels
+   ```
+
+4. **Set Channel Priority:**
+   ```bash
+   conda config --set channel_priority strict
+   ```
+   **Options:**
+   - `strict`: Enforces channel priority.
+   - `flexible`: Allows packages from lower priority channels if not available in higher ones.
+   - `disabled`: Disables channel priority.
+
+---
+
+#### **D. Environment and Package Information**
+
+1. **Get Detailed Environment Information:**
+   ```bash
+   conda info
+   ```
+
+2. **Get Package Information:**
+   ```bash
+   conda info package_name
+   ```
+   **Example:**
+   ```bash
+   conda info numpy
+   ```
+
+3. **Check for Package Updates:**
+   ```bash
+   conda search package_name --info
+   ```
+   **Example:**
+   ```bash
+   conda search pytorch --info
+   ```
+
+---
+
+#### **E. Cleaning Up**
+
+1. **Clean Package Cache:**
+   ```bash
+   conda clean --packages
+   ```
+
+2. **Clean Tarballs and Cache:**
+   ```bash
+   conda clean --tarballs --yes
+   ```
+
+3. **Clean All Unused Packages and Cache:**
+   ```bash
+   conda clean --all -y
+   ```
+
+4. **Remove Unused Packages from the Cache:**
+   ```bash
+   conda clean --packages --yes
+   ```
+
+5. **Remove Index Cache:**
+   ```bash
+   conda clean --index-cache --yes
+   ```
+
+---
+
+#### **F. Advanced Commands and Tips**
+
+1. **Export an Environment to YAML Including Only Explicit Packages:**
+   ```bash
+   conda env export --from-history > environment.yml
+   ```
+   **Note:** This includes only the packages you explicitly installed, excluding dependencies.
+
+2. **Import an Environment from YAML:**
+   ```bash
+   conda env create -f environment.yml
+   ```
+
+3. **List All Conda Commands:**
+   ```bash
+   conda --help
+   ```
+
+4. **List All Commands for a Specific Conda Subcommand:**
+   ```bash
+   conda <subcommand> --help
+   ```
+   **Example:**
+   ```bash
+   conda install --help
+   ```
+
+5. **Check Conda Configuration:**
+   ```bash
+   conda config --show
+   ```
+
+6. **Edit Conda Configuration File Directly:**
+   ```bash
+   conda config --edit
+   ```
+   **Note:** Be cautious when editing the configuration file manually.
+
+7. **List All Installed Packages Across All Environments:**
+   ```bash
+   conda list --name env_name
+   ```
+   **Example:**
+   ```bash
+   conda list --name base
+   ```
+
+8. **Create an Environment from an Explicit List of Packages:**
+   ```bash
+   conda create --name env_name --file requirements.txt
+   ```
+   **Example:**
+   ```bash
+   conda create --name my_env --file requirements.txt
+   ```
+
+9. **Update Conda Itself:**
+   ```bash
+   conda update conda
+   ```
+
+10. **Downgrade Conda to a Specific Version:**
+    ```bash
+    conda install conda=version_number
+    ```
+    **Example:**
+    ```bash
+    conda install conda=4.10.1
+    ```
+
+11. **Remove All Packages in an Environment:**
+    ```bash
+    conda remove --name env_name --all
+    ```
+    **Example:**
+    ```bash
+    conda remove --name old_env --all
+    ```
+
+12. **List Conda Configuration Keys:**
+    ```bash
+    conda config --show
+    ```
+
+13. **Set a Default Environment:**
+    ```bash
+    conda config --set auto_activate_base false
+    ```
+    **Example:**
+    ```bash
+    conda config --set auto_activate_base false
+    ```
+
+14. **Enable Mamba for Faster Operations (Alternative to Conda):**
+    **Install Mamba:**
+    ```bash
+    conda install mamba -n base -c conda-forge
+    ```
+    **Use Mamba Instead of Conda:**
+    ```bash
+    mamba install package_name
+    ```
+
+    **Benefits:**
+    - Faster dependency resolution.
+    - Compatible with Conda commands.
+
+15. **Check Environment Variables Managed by Conda:**
+    ```bash
+    conda env config vars list
+    ```
+
+16. **Set Environment Variables for a Conda Environment:**
+    ```bash
+    conda env config vars set VAR_NAME=value
+    ```
+    **Example:**
+    ```bash
+    conda env config vars set CUDA_HOME=C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v11.6
+    ```
+
+17. **Unset Environment Variables for a Conda Environment:**
+    ```bash
+    conda env config vars unset VAR_NAME
+    ```
+    **Example:**
+    ```bash
+    conda env config vars unset CUDA_HOME
+    ```
+
+18. **Remove a Specific Version of a Package:**
+    ```bash
+    conda remove package_name=version
+    ```
+    **Example:**
+    ```bash
+    conda remove numpy=1.19.2
+    ```
+
+19. **List All Available Versions of a Package:**
+    ```bash
+    conda search package_name --channel channel_name
+    ```
+    **Example:**
+    ```bash
+    conda search tensorflow --channel conda-forge
+    ```
+
+20. **Create an Environment with No Packages (Minimal Environment):**
+    ```bash
+    conda create --name env_name --no-default-packages
+    ```
+    **Example:**
+    ```bash
+    conda create --name minimal_env --no-default-packages
+    ```
+
+21. **List Environments with Their Active Channels:**
+    ```bash
+    conda env list
+    ```
+    **Example Output:**
+    ```
+    # conda environments:
+    #
+    base                  *  C:/Users/username/miniconda3
+    my_env                   C:/Users/username/miniconda3/envs/my_env
+    ```
+
+22. **Specify a Platform for Cross-Compilation:**
+    ```bash
+    conda create --name env_name --platform platform_name
+    ```
+    **Example:**
+    ```bash
+    conda create --name win_env --platform win-64
+    ```
+
+23. **Use a Specific Channel Temporarily:**
+    ```bash
+    conda install package_name -c channel_name --override-channels
+    ```
+    **Example:**
+    ```bash
+    conda install opencv -c conda-forge --override-channels
+    ```
+
+24. **List All Available Packages in a Channel:**
+    ```bash
+    conda search --channel channel_name
+    ```
+    **Example:**
+    ```bash
+    conda search --channel conda-forge
+    ```
+
+25. **Pin Package Versions to Prevent Upgrades:**
+    **Edit the `conda-meta/pinned` File:**
+    ```bash
+    echo "package_name version" >> C:/path_to_env/conda-meta/pinned
+    ```
+    **Example:**
+    ```bash
+    echo "numpy 1.19.2" >> C:/Users/username/miniconda3/envs/my_env/conda-meta/pinned
+    ```
+
+---
+
+### **3. Best Practices and Advanced Tips**
+
+1. **Use Channels Wisely:**
+   - **Primary Channels:** `defaults` and `conda-forge` are the most commonly used.
+   - **Channel Priority:** Set `conda-forge` with higher priority if you prefer its packages.
+     ```bash
+     conda config --add channels conda-forge
+     conda config --set channel_priority strict
+     ```
+
+2. **Keep Environments Clean:**
+   - **Avoid Installing Unnecessary Packages:** Install only what you need to minimize conflicts.
+   - **Regularly Clean Up:** Use `conda clean --all -y` to free up space and remove unused packages.
+
+3. **Use Environment Variables for Custom Paths:**
+   - **Set Variables Within Conda Environments:**
+     ```bash
+     conda env config vars set VAR_NAME=value
+     conda activate env_name
+     ```
+
+4. **Leverage Mamba for Speed:**
+   - **Install Mamba:** A faster alternative to Conda for package management.
+     ```bash
+     conda install mamba -n base -c conda-forge
+     ```
+   - **Use Mamba Commands:**
+     ```bash
+     mamba install package_name
+     mamba update package_name
+     mamba remove package_name
+     ```
+
+5. **Manage Multiple Python Versions:**
+   - **Create Environments with Specific Python Versions:**
+     ```bash
+     conda create -n py38_env python=3.8
+     conda create -n py39_env python=3.9
+     ```
+
+6. **Backup and Restore Environments:**
+   - **Export Environment:**
+     ```bash
+     conda env export > environment.yml
+     ```
+   - **Import Environment:**
+     ```bash
+     conda env create -f environment.yml
+     ```
+
+7. **List Conda Configuration Parameters:**
+   ```bash
+   conda config --show
+   ```
+
+8. **Configure Conda to Always Confirm Actions:**
+   - **Enable Always Yes for Specific Operations:**
+     - Use the `-y` flag as previously mentioned.
+   - **Set Configuration Defaults (Not Recommended for All Users):**
+     - You can set default flags in the `.condarc` file, but this is generally not recommended as it can lead to unintended actions.
+     - Example:
+       ```yaml
+       always_yes: true
+       ```
+
+9. **Troubleshoot Installation Issues:**
+   - **Check Conda's Current Configuration:**
+     ```bash
+     conda config --show
+     ```
+   - **Reset Conda Configuration to Defaults:**
+     ```bash
+     conda config --remove-key key_name
+     ```
+     **Example:**
+     ```bash
+     conda config --remove-key channels
+     ```
+
+10. **Use Conda-Pack for Environment Portability:**
+    - **Install Conda-Pack:**
+      ```bash
+      conda install -c conda-forge conda-pack
+      ```
+    - **Pack an Environment:**
+      ```bash
+      conda-pack -n env_name -o env_name.tar.gz
+      ```
+    - **Unpack the Environment:**
+      ```bash
+      mkdir unpacked_env
+      tar -xzf env_name.tar.gz -C unpacked_env
+      ```
+
+---
+
+### **4. Recommendations for Your Specific Use Case**
+
+Given your extensive setup involving OpenCV, HDF5, CUDA, PyTorch3D, and other 3D reconstruction tools, here are some tailored recommendations:
+
+1. **Start with a Clean Conda Environment:**
+   - **Create a New Environment:**
+     ```bash
+     conda create -n 3d_recon_env python=3.10
+     conda activate 3d_recon_env
+     ```
+
+2. **Install Essential Dependencies via Conda:**
+   - **Core Libraries:**
+     ```bash
+     conda install -c conda-forge eigen ceres-solver glog gflags hdf5 vtk qt
+     ```
+   - **CUDA and cuDNN:**
+     - Ensure compatibility between CUDA Toolkit and cuDNN versions.
+     ```bash
+     conda install -c nvidia cuda-toolkit cudnn
+     ```
+   - **Other Libraries:**
+     ```bash
+     conda install -c conda-forge pyqt
+     ```
+
+3. **Install PyTorch and PyTorch3D:**
+   - **PyTorch with CUDA Support:**
+     ```bash
+     conda install pytorch torchvision torchaudio pytorch-cuda=11.7 -c pytorch -c nvidia
+     ```
+   - **PyTorch3D:**
+     ```bash
+     pip install pytorch3d
+     ```
+
+4. **Install Additional Python Packages:**
+   ```bash
+   pip install pyvista trimesh opencv-python
+   ```
+
+5. **Build OpenCV from Source with Required Modules:**
+   - **Ensure All Dependencies Are Installed and Accessible:**
+     - Eigen, GLog, GFlags, Ceres, HDF5 should be installed via Conda.
+   - **Use CMake GUI for Configuration:**
+     - Set `OPENCV_EXTRA_MODULES_PATH` to `path_to_opencv_contrib/modules`.
+     - Enable `WITH_CUDA`, `WITH_CUDNN`, `WITH_SFM`, `OPENCV_ENABLE_NONFREE`.
+     - Specify paths for HDF5 and other dependencies if necessary.
+   - **Build Using Visual Studio or Ninja:**
+     ```bash
+     cmake --build . --config Release
+     ```
+
+6. **Verify the Build:**
+   - **Test OpenCV and SFM Module:**
+     ```python
+     import cv2
+     print(cv2.getBuildInformation())
+     import cv2.sfm
+     print("SFM module imported successfully")
+     ```
+
+7. **Manage Environment Variables Carefully:**
+   - **Ensure No Conflicting Paths:**
+     - Temporarily deactivate or adjust environment variables to prevent conflicts between Conda's HDF5 and your custom-built HDF5.
+   - **Use Environment-Specific Variables:**
+     ```bash
+     conda env config vars set HDF5_ROOT=C:/path_to_custom_hdf5
+     conda activate 3d_recon_env
+     ```
+
+8. **Consider Using Mamba for Faster Dependency Resolution:**
+   - **Install Mamba:**
+     ```bash
+     conda install mamba -n base -c conda-forge
+     ```
+   - **Use Mamba for Installing Packages:**
+     ```bash
+     mamba install package_name
+     ```
+
+9. **Documentation and Version Control:**
+   - **Maintain an `environment.yml` File:**
+     ```bash
+     conda env export > environment.yml
+     ```
+   - **Use Version Control for Scripts and Configuration Files:**
+     - Keep track of changes to build scripts, CMake configurations, and environment setups.
+
+---
+
+
+
+
+
+Get-ChildItem C:\Users\joems\miniconda3\envs -Directory | ForEach-Object {
+    $size = (Get-ChildItem $_.FullName -Recurse | Measure-Object -Property Length -Sum).Sum / 1GB
+    [PSCustomObject]@{
+        Environment = $_.Name
+        "Size(GB)" = [math]::Round($size, 2)
+    }
+}

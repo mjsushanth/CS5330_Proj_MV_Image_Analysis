@@ -1,0 +1,2298 @@
+New Approach:
+
+## ------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+# PHASE 0;
+
+# CUDA and CUDNN Setup.
+# Pre Requisites: Install CUDA 12.1 and Install CuDNN 9.1.0, for windows.
+# If other versions are chosen, their paths are to be checked thoroughly and the compatibility matrix on ReadME/Install pages for pytorch is to be checked.
+
+# After installing, follow these steps.
+
+# Create directories if they don't exist - This is most likely not needed. The directories are formed.
+mkdir "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.1\include" 2>nul
+mkdir "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.1\lib\x64" 2>nul
+mkdir "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.1\bin" 2>nul
+
+# Copy files (contents only, not folders)
+copy "C:\Program Files\NVIDIA\CUDNN\v9.1\include\12.4\cudnn*.h" "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.1\include\"
+copy "C:\Program Files\NVIDIA\CUDNN\v9.1\lib\12.4\x64\cudnn*.lib" "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.1\lib\x64\"
+copy "C:\Program Files\NVIDIA\CUDNN\v9.1\bin\12.4\cudnn*.dll" "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.1\bin\"
+
+
+# Verify the copies were successful
+echo Verifying copies...
+echo.
+echo Include files:
+dir "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.1\include\cudnn*.h"
+echo. 
+echo Library files:
+dir "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.1\lib\x64\cudnn*.lib"
+echo.
+echo DLL files:
+dir "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.1\bin\cudnn*.dll"
+
+
+# In your VSCode CMD or Normal CMD, # Verify these.
+  nvidia-smi 
+  nvcc --version
+
+# Note: All this should be done in VSCODE developer command prompt; preferred vscode 19 2016
+# ** Visual Studio 2019 Developer Command Prompt v16.11.41.
+
+# Install VS and make sure 'Desktop Development tools with C++' is selected, install those as they are an important dependancy.
+
+
+# ------------------------------------------------------------------------------------------------------------------------------------------------------------
+cd "C:\Users\joems\OneDrive\Desktop\MLCV Project Items\Comp Vision CS 5330"
+conda activate eth3d_reconstruction
+
+
+# ETH3D Environment Setup Guide
+# Compatible with:
+# - Python 3.10
+# - PyTorch 2.4.1
+# - CUDA 12.1
+# - cuDNN 9.1.0.70
+
+
+# pytorch , python, c++, stable cuda - cudnn, ROCm.
+# 2.4 >=3.8, <=3.12 C++17 CUDA 11.8, CUDA 12.1, CUDNN 9.1.0.70, ROCm 6.1
+
+
+# 1. Clean previous environment (if exists)
+conda deactivate
+conda env remove -n eth3d_reconstruction
+conda clean --all --yes
+
+# 2. Base Environment Creation
+cd "C:\Users\joems\OneDrive\Desktop\MLCV Project Items\Comp Vision CS 5330"
+conda create -n eth3d_reconstruction python=3.10 -y
+conda activate eth3d_reconstruction
+
+# 3. Environment Variables Setup
+set CUDA_HOME=C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.1
+set CUDA_PATH=%CUDA_HOME%
+set PATH=C:\Program Files\NVIDIA\CUDNN\v9.1\bin\12.4;%PATH%
+set PATH=C:\Program Files\NVIDIA\CUDNN\v9.1\lib\12.4\x64;%PATH%
+set PATH=%CUDA_HOME%\bin;%PATH%
+
+# This depends on your gpu model; so search online and find the compute capability number. 
+set TORCH_CUDA_ARCH_LIST=8.6
+set CONDA_ALWAYS_YES=true
+
+
+# 4. Install Mamba for faster package management
+conda install mamba -n base -c conda-forge -y
+
+
+# 5. Core Scientific Stack (Foundation)
+mamba install -c conda-forge ^
+    numpy scipy pandas ^
+    matplotlib seaborn plotly ^
+    tqdm h5py ^
+    cmake ninja ^
+    mkl=2023.1.0 ^
+    -y
+
+
+# 6. PyTorch Stack (using pip for better version control)
+pip3 install torch==2.4.1 torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
+
+
+# 7. Build Dependencies
+mamba install -c conda-forge ^
+    eigen ^
+    ceres-solver ^
+    glog ^
+    gflags ^
+    -y
+
+
+# 7.1 Jupyter lab.
+mamba install -c conda-forge jupyterlab jupyterlab-git jupyterlab-lsp python-lsp-server jupyterlab_widgets ipywidgets ipyparallel ipykernel -y
+
+
+# 8. Install Remaining Conda Packages
+mamba install -c conda-forge ^
+    blas=*=mkl lapack ^
+    -y
+
+
+# 8.1. Missing ? Do a check.
+
+mamba list | findstr vtk
+mamba list | findstr blas
+mamba list | findstr lapack
+mamba list | findstr ceres
+mamba list | findstr glog
+mamba list | findstr gflags
+
+# 9. VTK Installation Recommendation
+# Removed VTK from Conda dependencies to handle via pip to prevent conflicts
+
+# 10. Install Remaining Pip Packages
+pip install vtk==9.2.6 pyvista
+pip install pymeshlab open3d iopath fvcore moviepy rich pyopengl pyopengl-accelerate PyYAML pyglet jsonschema
+
+
+# 11. Handle CuPy Installation
+# Remove CuPy if installed via Conda
+conda remove -y cupy
+
+# Install CuPy with CUDA 12.1 support via pip
+pip install cupy-cuda12x==13.3.0
+
+
+
+# 11.5 Installing pip openCV.
+
+cd "C:\Users\joems\OneDrive\Desktop\MLCV Project Items\Comp Vision CS 5330"
+conda activate eth3d_reconstruction
+
+# if present already.
+pip uninstall -y opencv-python opencv-contrib-python
+
+conda list opencv
+
+# option 2; pip is second preference.
+# do a test after the full environment setup; and if you face a strong ABI / incompatibility error about numpy cv conflict, use conda.
+
+pip install opencv-python==4.5.5.64 opencv-contrib-python==4.5.5.64
+
+
+# option 1; conda is best preference.
+conda install -c conda-forge opencv
+
+--> the reason you need to experiment is, pip comes with its own wheels / packaged binaries for openCV where it doesnt consider broader conflicts and broader dependencies of the whole environment. sometimes, conda refuses to install openCV saying a particular dependency tree cant be solved. in such cases, we have to have a mixed installaion and pip should cover things up.
+
+## ------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+## Step-by-step outline to install PyTorch3D on your setup, incorporating analysis and ensuring we’re in the correct environment for each phase. 
+
+---
+
+### 1. Initial Setup and Repository Cloning (Miniconda Prompt)
+
+1. **Open Miniconda Prompt** and initialize Conda:
+   
+conda init
+   
+   - **Close** and **reopen** the Miniconda Prompt after running `conda init`.
+
+2. **Activate your Conda environment**:
+   
+conda activate eth3d_reconstruction
+   
+
+3. **Set Miniconda Scripts in the PATH temporarily**:
+4. **Clone the PyTorch3D repository**:
+5. **Navigate to the PyTorch3D directory**:
+6. **Pull the latest changes** (optional but recommended):
+
+set PATH=C:\Users\joems\miniconda3\Scripts;%PATH%
+   
+cd C:\Users\joems\Projects
+git clone https://github.com/facebookresearch/pytorch3d.git
+   
+cd pytorch3d
+   
+git pull origin main
+   
+
+
+### 2. Set Environment Variables (VS Code Developer Command Prompt)
+
+1. **Open the VS Code Developer Command Prompt for VS 2019**.
+2. **Navigate to the PyTorch3D directory**:
+3. **Activate your Conda environment in the same prompt**:
+
+
+cd C:\Users\joems\Projects\pytorch3d
+conda activate eth3d_reconstruction
+   
+
+4. **Set CUDA Architecture and CUDA Path**:
+   - Since your GPU (RTX 3080) has a compute capability of 8.6:
+5. **Add Conda Library bin to PATH temporarily**:
+6. **Check `ctypes` compatibility**:
+
+
+set TORCH_CUDA_ARCH_LIST=8.6
+set CUDA_HOME=C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.1
+set CUDA_PATH=%CUDA_HOME%
+   
+set PATH=C:\Users\joems\miniconda3\Library\bin;%PATH%
+   
+python -c "import ctypes; print('ctypes loaded successfully')"
+   
+
+
+
+### 3. Prepare the Environment for Building PyTorch3D (VS Code Developer Command Prompt)
+
+1. **Ensure required packages are installed or updated**: -> Note, they have already been installed above.
+2. **Set additional environment variables for building**:
+3. **Clean Previous Build Files**:
+   - If you have previously built PyTorch3D, clean up old build files to avoid conflicts:
+   
+
+pip install fvcore iopath
+      
+set DISTUTILS_USE_SDK=1
+set PYTORCH3D_NO_NINJA=1
+set MAX_JOBS=4
+   
+python setup.py clean
+rmdir /S /Q build
+rmdir /S /Q dist
+rmdir /S /Q pytorch3d.egg-info
+   
+
+4. **Verify `link.exe` from VS Build Tools**:
+   - In the Miniconda environment, Conda’s `link.exe` can conflict with the MSVC linker. We’ll temporarily rename it to ensure only the MSVC linker is used:
+   - If your virtual env doesnt have a link, then feel free to ignore this part.
+
+cd C:\Users\joems\miniconda3\envs\eth3d_reconstruction\Library\usr\bin
+rename link.exe link_bak.exe
+
+
+
+
+### 4. Compile and Install PyTorch3D (VS Code Developer Command Prompt)
+
+1. **Return to the PyTorch3D directory**:
+   
+cd C:\Users\joems\Projects\pytorch3d
+   
+
+2. **Set Visual Studio Paths and Configure**:
+   - Ensure Visual Studio 2019 paths are included for compatibility:
+   
+set VS2019_PATH="C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools"
+set PATH=%VS2019_PATH%\VC\Tools\MSVC\14.29.30133\bin\Hostx64\x64;%PATH%
+   
+
+3. **Verify the correct linker is in use**:
+   
+where link.exe
+   
+   - This should point to the MSVC linker within Visual Studio 2019’s toolchain.
+
+4. **Install PyTorch3D**:
+   
+python setup.py install
+   
+
+### 5. Verify Installation and Restore Environment
+
+1. **Restore the original `link.exe`** (in case Conda tools need it):
+   
+cd C:\Users\joems\miniconda3\envs\eth3d_reconstruction\Library\usr\bin
+rename link_bak.exe link.exe
+   
+
+2. **Run verification commands**:
+   - Basic check for PyTorch3D version:
+     
+python -c "import pytorch3d; print(f'PyTorch3D version: {pytorch3d.__version__}')"
+     
+
+   # - Full verification, checking PyTorch, CUDA, and GPU availability:
+     
+python -c "import torch; import pytorch3d; print(f'PyTorch version: {torch.__version__}\nPyTorch3D version: {pytorch3d.__version__}\nCUDA Available: {torch.cuda.is_available()}\nCUDA Version: {torch.version.cuda}\nGPU Device: {torch.cuda.get_device_name(0) if torch.cuda.is_available() else \"No GPU\"}')"
+     
+python -c "import torch; from pytorch3d.structures import Meshes; print('PyTorch3D Meshes Module Imported Successfully')"
+
+
+
+
+
+## ------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+## Create and Configure Jupyter Kernel for the Environment
+
+1. **Install Jupyter kernel and notebook requirements**: OPTIONAL: notice dependencies, it already includes this stuff.
+   
+conda install -y ipykernel jupyter jupyterlab notebook
+   
+
+2. **Create a kernel for the `eth3d_reconstruction` environment**:
+
+
+jupyter kernelspec uninstall eth3d_reconstruction
+   
+python -m ipykernel install --user --name eth3d_reconstruction --display-name "Python (eth3d_reconstruction)"
+   
+
+## ------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+## for launching: ! 
+cd "C:\Users\joems\OneDrive\Desktop\MLCV Project Items\Comp Vision CS 5330"
+jupyter lab
+
+
+
+## ------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+# 9. Verification Commands
+# 9.1. CUDA and cuDNN Check
+# 9.2. PyTorch and CUDA Check
+# 9.3. Full System Check, CuPy Check.
+
+cd "C:\Users\joems\OneDrive\Desktop\MLCV Project Items\Comp Vision CS 5330"
+conda activate eth3d_reconstruction
+
+
+python -c "import ctypes; print('ctypes loaded successfully')"
+
+python -c "import ctypes; print(f'cuDNN: {\"OK\" if ctypes.CDLL(\"C:/Program Files/NVIDIA/CUDNN/v9.1/bin/12.4/cudnn64_9.dll\") else \"Failed\"}')"
+
+
+python -c "import torch; print(f'PyTorch Version: {torch.__version__}\nCUDA Available: {torch.cuda.is_available()}\nCUDA Version: {torch.version.cuda}\nGPU Device: {torch.cuda.get_device_name(0) if torch.cuda.is_available() else \"No GPU available\"}\nNumber of GPUs: {torch.cuda.device_count()}')"
+
+python -c "import torch; print(f'PyTorch: {torch.__version__}\nCUDA: {torch.version.cuda} (Available: {torch.cuda.is_available()})\nGPU: {torch.cuda.get_device_name(0) if torch.cuda.is_available() else \"None\"}')"
+
+python -c "import sys, torch, platform, ctypes, os; print(f'\n=== System & CUDA Check ===\nPython: {platform.python_version()}\nPyTorch: {torch.__version__}\nCUDA Available: {torch.cuda.is_available()}\nCUDA Version: {torch.version.cuda}\nGPU: {torch.cuda.get_device_name(0) if torch.cuda.is_available() else \"No GPU\"}\nGPU Count: {torch.cuda.device_count()}\nCompute Capability: {torch.cuda.get_device_properties(0).major}.{torch.cuda.get_device_properties(0).minor if torch.cuda.is_available() else \"N/A\"}\n\n=== CUDA Test ==='); test_tensor = torch.randn(1000, 1000).cuda() if torch.cuda.is_available() else None; test_result = torch.matmul(test_tensor, test_tensor) if test_tensor is not None else None; print('✓ CUDA Operations: Matrix Multiplication Successful' if test_result is not None else '❌ CUDA Test Failed'); del test_tensor, test_result; torch.cuda.empty_cache(); print(f'\n=== Environment ===\nCUDA_HOME: {os.environ.get(\"CUDA_HOME\", \"Not Set\")}\nCUDA_PATH: {os.environ.get(\"CUDA_PATH\", \"Not Set\")}\ncuDNN: {\"✓ Loaded OK\" if ctypes.CDLL(\"C:/Program Files/NVIDIA/CUDNN/v9.1/bin/12.4/cudnn64_9.dll\") else \"❌ Failed\"}\nGPU Memory: {torch.cuda.get_device_properties(0).total_memory/1024**3:.1f} GB')"
+
+
+python -c "import cupy as cp; print(f'CuPy Version: {cp.__version__}\nCUDA Available: {cp.is_available()}\nCUDA Device: {cp.cuda.runtime.getDeviceProperties(0)[\"name\"] if cp.is_available() else \"No GPU available\"}\nCUDA Version: {cp.cuda.runtime.runtimeGetVersion() // 1000}.{(cp.cuda.runtime.runtimeGetVersion() % 100) // 10}')"
+
+
+## ------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+# OPEN 3D RELATED FIXES : ----------------------------------------------------------------------------------------------------------------
+# Remove conda version
+
+cd "C:\Users\joems\OneDrive\Desktop\MLCV Project Items\Comp Vision CS 5330"
+conda activate eth3d_reconstruction
+
+pip uninstall open3d
+
+# Verify removal
+conda list open3d
+
+
+conda install -c conda-forge glew freeimage
+conda install -c conda-forge pyopengl
+conda install -c conda-forge pybind11
+
+
+# we did this change recently because other change for OPEN 3D didnt work. 
+# try installing a specific older version of Open3D that's compatible with MKL 2023.1.0:
+
+pip install --no-cache-dir open3d==0.17.0
+
+
+
+# --- DIDNT WORK
+#------------------------------------------------------------------------------------------------------------------------------------------
+# Install via pip with CUDA support
+# Note: For CUDA 12.1 that you have
+pip install --no-cache-dir open3d-gpu
+
+# Verify installation and CUDA support
+python -c "import open3d as o3d; print(f'Open3D version: {o3d.__version__}'); print(f'CUDA available: {o3d.core.cuda.is_available()}')"
+
+#------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+## COLMAP INSTALLATION:
+
+## Done so far and a success? Lets save a backup.
+conda env export -n eth3d_reconstruction > eth3d_recon_1105.yml
+
+
+## Cloning:
+
+conda deactivate
+conda create --name eth3d_reconstruction_backup --clone eth3d_reconstruction
+conda activate eth3d_reconstruction_backup
+conda list
+conda deactivate
+
+# Verify:
+C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.1\lib\x64\cudart.lib
+C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.1\lib\x64\cuda.lib
+
+# dont choose a specific build. -- this didnt work  for us.
+# conda install colmap=3.10=cpuh3420c36_1
+
+
+# try installing with nvidia channel. 
+
+conda search cudatoolkit -c conda-forge
+
+conda config --add channels nvidia
+conda search cudatoolkit -c nvidia
+
+## this doesnt work:: conda install -c nvidia cudatoolkit=12.1
+
+# so this, finally worked. --- https://anaconda.org/nvidia/cuda-toolkit
+
+
+conda config --set channel_priority flexible
+conda install nvidia/label/cuda-12.1.0::cuda-toolkit
+conda config --set channel_priority strict
+
+
+# if you want channel bypassing.
+conda install -c nvidia/label/cuda-12.1.0 cuda-toolkit --override-channels
+
+
+
+## Alternative; approach using pip. -- I preferred using conda. 
+pip install nvidia-pyindex
+pip install nvidia-cuda-runtime-cu12==12.1.*
+pip install nvidia-cuda-nvcc-cu12==12.1.* nvidia-cuda-cupti-cu12==12.1.*
+## --- These commands install the CUDA compiler (nvcc) and the CUDA Profiling Tools Interface (cupti) for version 12.1.
+
+
+## Go.
+cd "C:\Users\joems\OneDrive\Desktop\MLCV Project Items\Comp Vision CS 5330"
+conda activate eth3d_reconstruction
+
+
+:: Minimal and reorganized commands for setting up the environment before installing Colmap
+set VSCMD_DEBUG=3
+set VSCMD_SKIP_SENDTELEMETRY=1
+set VSINSTALLDIR=C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\
+set VCToolsInstallDir=%VSINSTALLDIR%VC\Tools\MSVC\14.29.30133\
+set VCToolsVersion=14.29.30133
+set CMAKE_GENERATOR_TOOLSET=v142
+set CMAKE_GENERATOR_PLATFORM=x64
+
+:: Update PATH
+set PATH=%VSINSTALLDIR%VC\Auxiliary\Build;%VCToolsInstallDir%bin\Hostx64\x64;%VSINSTALLDIR%MSBuild\Current\Bin;C:\Program Files (x86)\Windows Kits\10\bin\10.0.19041.0\x64;%PATH%
+set PATH=%PATH%;C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\Common7\Tools
+set PATH=%PATH%;%CONDA_PREFIX%\Library\bin
+
+:: Call required batch scripts
+CALL "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\VC\Auxiliary\Build\vcvars64.bat"
+CALL "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\Common7\Tools\VsDevCmd.bat"
+
+
+## IF Freuqnetly Required; 
+:: Set VSINSTALLDIR permanently for easier future access
+setx VSINSTALLDIR "C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools" /M
+CALL "%VSINSTALLDIR%\Common7\Tools\VsDevCmd.bat"
+
+
+:: Verify the Visual Studio compiler.. :: Verify the Visual Studio linker
+cl.exe
+link.exe
+
+:: Check CUDA compatibility
+nvcc --version
+nvidia-smi
+
+
+conda list qt
+conda list glew
+conda list freeimage
+conda list flann
+
+
+# Install dependencies
+
+
+## this strictness didnt work ---> 
+mamba install -c conda-forge boost-cpp=1.84.0 eigen=3.4.0 ceres-solver=2.2.0 glog=0.7.1 gflags=2.2.2 qt=5.15 glew=2.1.0 freeimage=3.18.0 flann=1.9.2 cgal=5.6.1 sqlite=3.47.0
+
+mamba install -c conda-forge libboost=1.84.0 libboost-python=1.84.0 mpfr=4.2.1 gstreamer=1.24.7 gst-plugins-base=1.24.7 libvorbis=1.3.7 libogg=1.3.5
+
+## didnt work ---> because of forced qt dependency conflict. 
+mamba install -c conda-forge boost-cpp eigen ceres-solver glog gflags glew freeimage cgal sqlite flann qt=5.15
+mamba install -c conda-forge libboost-devel=1.84.0 libboost-headers=1.84.0 libintl-devel=0.22.5
+
+
+mamba install -c conda-forge colmap=3.10
+mamba install -c conda-forge scikit-image trimesh
+
+# testing -- !
+conda install -c conda-forge pycolmap
+
+
+# safety net commands;
+
+mamba install -c conda-forge -y \
+    boost-cpp libjpeg-turbo libpng libtiff libwebp openexr \
+    openblas lapack blas sqlite glog gflags \
+    lcms2 liblzma libspqr libwinpthread-git \
+    lz4-c zlib libraw openexr imath \
+    libamd libcamd libccolamd libcholmod libcolamd \
+    libquadmath vcomp140 vc msvcp140
+
+mamba install -c conda-forge -y \
+    opencv ceres-solver eigen \
+    numpy scipy pandas matplotlib
+
+
+
+
+## ---------- pip pycolmap doesnt work.................. 
+pip install pycolmap==3.10.0
+
+## older--- before updating. 
+mamba install -c conda-forge boost-cpp eigen ceres-solver glog gflags glew freeimage cgal sqlite flann
+conda install -c conda-forge scikit-image trimesh boost -y
+mamba install -c conda-forge qt=5.15 -y
+conda install -c conda-forge qt6-base qt6-widgets qt6-opengl -y
+
+
+
+## ------------- -------------- -----------------  
+
+# Install COLMAP  .. # Finally install pycolmap
+
+conda uninstall colmap
+
+conda install -c conda-forge colmap
+colmap --help
+
+
+
+
+pip install pycolmap==3.10.0
+pip show pycolmap
+
+
+
+
+:: -> Specific build based approach did not work for us, it gave DLL failure, so lets try something different. 
+-> And, frther, pip based approach also did not work for me.
+
+# keep it flexible. dont choose a specific build.
+conda install colmap=3.10 
+
+# list for colmap and see it.
+conda list colmap
+
+# python bindings for colmap, install them.
+pip install pycolmap
+pip show pycolmap
+
+# check the version.
+colmap --version
+
+## try this out ?
+conda install -c conda-forge cudatoolkit=12.1
+
+
+
+
+## ------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+# saving your YML file.
+
+cd "C:\Users\joems\OneDrive\Desktop\MLCV Project Items\Comp Vision CS 5330"
+conda activate eth3d_reconstruction
+
+conda env export --name eth3d_reconstruction --file eth3d_reconstruction_backupv1.yml
+conda env export -n eth3d_reconstruction > eth3d_recon_1105_7AM.yml
+
+## ------------------------------------------------------------------------------------------------------------------------------------------------------------
+## ------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+## ------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+
+## COLMAP
+
+# Verify, Install Missing Dependencies. Remove and Reinstall if needed.
+
+conda activate eth3d_reconstruction
+
+
+
+
+# In VS 2019 Developer Command Prompt
+# Configure with CMake (Updated for Qt6)
+
+cd C:\Users\joems\Projects
+git clone https://github.com/colmap/colmap.git
+
+cd colmap
+cd C:\Users\joems\Projects
+
+
+
+
+
+cd C:\Users\joems\Projects\colmap\build
+
+del CMakeCache.txt
+rmdir /s /q CMakeFiles
+
+cd C:\Users\joems\Projects\colmap
+rmdir /S /Q build
+mkdir build
+cd build
+
+set CUDA_PATH=C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.1
+set CUDA_HOME=C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.1
+set CUDA_PATH_V12_1=C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.1
+set PATH=%CUDA_HOME%\bin;%PATH%
+
+-> did custom patching..of qt5.
+
+set CUDA_PATH=C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.1
+set CUDA_HOME=%CUDA_PATH%
+set CUDA_PATH_V12_1=%CUDA_PATH%
+set PATH=%CUDA_PATH%\bin;%PATH%
+
+
+cmake -G "Visual Studio 16 2019" -A x64 ^
+    -DCMAKE_INSTALL_PREFIX=C:/Users/joems/miniconda3/envs/eth3d_reconstruction ^
+    -DCUDA_ENABLED=ON ^
+    -DWITH_CUDA=ON ^
+    -DCUDA_ARCH_BIN=8.6 ^
+    -DCUDA_TOOLKIT_ROOT_DIR="%CUDA_HOME%" ^
+    -DCUDNN_INCLUDE_DIR="C:/Program Files/NVIDIA/CUDNN/v9.1/include" ^
+    -DCUDNN_LIBRARY="C:/Program Files/NVIDIA/CUDNN/v9.1/lib/x64/cudnn.lib" ^
+    -DWITH_NVCUVID=ON ^
+    -DBUILD_SHARED_LIBS=ON ^
+    -DEIGEN_INCLUDE_DIR_HINTS="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/include/eigen3" ^
+    -DCERES_DIR="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/lib/cmake/Ceres" ^
+    -DGLOG_INCLUDE_DIR="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/include" ^
+    -DGLOG_LIBRARY="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/lib/glog.lib" ^
+    -DBoost_DIR="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/lib/cmake/Boost-1.84.0" ^
+    -DCGAL_DIR="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/lib/cmake/CGAL" ^
+    -DCMAKE_CUDA_COMPILER="%CUDA_HOME%/bin/nvcc.exe" ^
+    -DCMAKE_CUDA_ARCHITECTURES=86 ^
+    -DFLANN_INCLUDE_DIR="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/include" ^
+    -DFLANN_LIBRARY="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/lib/flann_cpp.lib" ^
+    -DQt6_DIR="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/lib/cmake/Qt6" ^
+    -DQt6Core_DIR="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/lib/cmake/Qt6Core" ^
+    -DQt6Gui_DIR="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/lib/cmake/Qt6Gui" ^
+    -DQt6OpenGL_DIR="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/lib/cmake/Qt6OpenGL" ^
+    -DQt6Widgets_DIR="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/lib/cmake/Qt6Widgets" ^
+    -DGUI_ENABLED=ON ^
+    -DCMAKE_PREFIX_PATH="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library" ^
+    C:/Users/joems/Projects/colmap
+
+
+
+
+# Build using Visual Studio's build tool
+cmake --build . --config Release
+
+# After successful build, install
+cmake --install . --config Release
+
+
+
+
+cmake -G "Visual Studio 16 2019" -A x64 ^
+    -DCMAKE_INSTALL_PREFIX=C:/Users/joems/miniconda3/envs/eth3d_reconstruction ^
+    -DCUDA_ENABLED=ON ^
+    -DWITH_CUDA=ON ^
+    -DCUDA_ARCH_BIN=8.6 ^
+    -DCUDA_TOOLKIT_ROOT_DIR="%CUDA_HOME%" ^
+    -DCUDNN_INCLUDE_DIR="C:/Program Files/NVIDIA/CUDNN/v9.1/include" ^
+    -DCUDNN_LIBRARY="C:/Program Files/NVIDIA/CUDNN/v9.1/lib/x64/cudnn.lib" ^
+    -DWITH_NVCUVID=ON ^
+    -DBUILD_SHARED_LIBS=ON ^
+    -DEIGEN_INCLUDE_DIR_HINTS="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/include/eigen3" ^
+    -DQt6_DIR="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/lib/cmake/Qt6" ^
+    -DCERES_DIR="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/lib/cmake/Ceres" ^
+    -DGLOG_INCLUDE_DIR="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/include" ^
+    -DGLOG_LIBRARY="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/lib/glog.lib" ^
+    -DBoost_DIR="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/lib/cmake/Boost-1.84.0" ^
+    -DCGAL_DIR="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/lib/cmake/CGAL" ^
+    -DCMAKE_CUDA_COMPILER="%CUDA_HOME%/bin/nvcc.exe" ^
+    -DCMAKE_CUDA_ARCHITECTURES=86 ^
+    -DFLANN_INCLUDE_DIR="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/include" ^
+    -DFLANN_LIBRARY="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/lib/flann_cpp.lib" ^
+    C:/Users/joems/Projects/colmap
+
+
+cmake -G "Visual Studio 16 2019" -A x64 -T host=x64 ^
+    -DCMAKE_INSTALL_PREFIX=C:/Users/joems/miniconda3/envs/eth3d_reconstruction ^
+    -DCUDA_ENABLED=ON ^
+    -DCMAKE_CUDA_COMPILER="C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v12.1/bin/nvcc.exe" ^
+    -DCMAKE_CUDA_ARCHITECTURES=86 ^
+    -DCUDA_TOOLKIT_ROOT_DIR="C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v12.1" ^
+    -DCUDA_INCLUDE_DIRS="C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v12.1/include" ^
+    -DCUDA_LIBRARIES="C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v12.1/lib/x64" ^
+    -DEIGEN_INCLUDE_DIR_HINTS="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/include/eigen3" ^
+    -DCMAKE_PREFIX_PATH="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/lib/cmake" ^
+    -DQt6_DIR="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/lib/cmake/Qt6" ^
+    -DCERES_DIR="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/lib/cmake/Ceres" ^
+    -DGLOG_INCLUDE_DIR="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/include" ^
+    -DGLOG_LIBRARY="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/lib/glog.lib" ^
+    -DUSE_OPENMP=ON ^
+    -DBoost_DIR="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/lib/cmake/Boost-1.84.0" ^
+    -DBoost_INCLUDE_DIR="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/include" ^
+    -DCGAL_DIR="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/lib/cmake/CGAL" ^
+    C:/Users/joems/Projects/colmap
+
+
+
+
+
+## -----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+cd C:\Users\joems\Projects\opencv-python
+
+# Clean previous builds
+# Set environment variables # Set CMake generator (now verified working) # Add these environment variables for skbuild
+
+if exist dist rmdir /s /q dist
+if exist _skbuild rmdir /s /q _skbuild
+if exist build rmdir /s /q build
+if exist _cmake_test_compile rmdir /s /q _cmake_test_compile
+if exist opencv\build rmdir /s /q opencv\build
+if exist opencv_contrib\build rmdir /s /q opencv_contrib\build
+
+pip cache remove opencv-contrib-python
+pip cache remove opencv-python
+
+dir
+echo.
+echo Checking for remaining build directories:
+dir /s /b | findstr /i "_skbuild _cmake_test"
+
+
+## These below are - not working.
+## set CMAKE_GENERATOR="Visual Studio 16 2019"  // set CMAKE_GENERATOR_PLATFORM=x64 // set SKBUILD_CMAKE_GENERATOR="Visual Studio 16 2019"
+## set SKBUILD_CMAKE_ARGS=-A x64 // ## set CMAKE_GENERATOR_TOOLSET=v142
+
+
+
+## issue with path escaping in the CUDA paths. CMake is interpreting \P as an invalid escape sequence.
+
+set CUDA_HOME=C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v12.1
+set CUDA_PATH=%CUDA_HOME%
+set ENABLE_CONTRIB=1
+
+## set CUDAHOSTCXX="C:/Program Files (x86)/Microsoft Visual Studio/2019/BuildTools/VC/Tools/MSVC/14.29.30133/bin/Hostx64/x64/cl.exe"
+set CUDAHOSTCXX=C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\VC\Tools\MSVC\14.29.30133\bin\Hostx64\x64\cl.exe
+
+set CMAKE_GENERATOR="Visual Studio 17 2022"
+set CMAKE_GENERATOR_PLATFORM=x64
+
+
+conda activate eth3d_reconstruction
+echo %CONDA_PREFIX%
+
+
+set CMAKE_ARGS=-DWITH_CUDA=ON ^
+    -DCUDA_ARCH_BIN=8.6 ^
+    -DCUDA_TOOLKIT_ROOT_DIR="C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v12.1" ^
+    -DWITH_CUDNN=ON ^
+    -DCUDNN_VERSION=9.1.0 ^
+    -DCUDNN_INCLUDE_DIR="C:/Program Files/NVIDIA/CUDNN/v9.1/include/12.4" ^
+    -DCUDNN_LIBRARY="C:/Program Files/NVIDIA/CUDNN/v9.1/lib/12.4/x64/cudnn.lib" ^
+    -DCUDNN_DLL="C:/Program Files/NVIDIA/CUDNN/v9.1/bin/12.4/cudnn64_9.dll" ^
+    -DENABLE_FAST_MATH=ON ^
+    -DBUILD_opencv_world=ON ^
+    -DWITH_OPENGL=ON ^
+    -DBUILD_opencv_python3=ON ^
+    -DBUILD_opencv_sfm=ON ^
+    -DCERES_DIR="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/lib/cmake/Ceres" ^
+    -DGLOG_INCLUDE_DIR="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/include" ^
+    -DGLOG_LIBRARY="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/lib/glog.lib" ^
+    -DGFLAGS_INCLUDE_DIR="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/include" ^
+    -DGFLAGS_LIBRARY="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/lib/gflags_static.lib" ^
+    -DVTK_DIR="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/lib/cmake/vtk-9.2" ^
+    -DBLAS_LIBRARIES="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/lib/mkl_rt.lib" ^
+    -DLAPACK_LIBRARIES="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/lib/mkl_rt.lib" ^
+    -DWITH_NVCUVID=OFF ^
+    -DWITH_NVCUVENC=OFF ^
+    -DWITH_FFMPEG=OFF ^
+    -DBUILD_PERF_TESTS=OFF ^
+    -DBUILD_TESTS=OFF ^
+    -DBUILD_EXAMPLES=OFF ^
+    -DINSTALL_PYTHON_EXAMPLES=OFF ^
+    -DINSTALL_C_EXAMPLES=OFF ^
+    -DOPENCV_ENABLE_NONFREE=ON ^
+    -DOPENCV_FORCE_3RDPARTY_BUILD=OFF ^
+    -DBUILD_opencv_python_tests=OFF ^
+    -DCMAKE_TOOLCHAIN_FILE="C:/Users/joems/Projects/vcpkg/scripts/buildsystems/vcpkg.cmake" ^
+    -DCUDA_NVCC_FLAGS="-allow-unsupported-compiler"
+
+
+
+pip wheel . --verbose
+
+
+
+
+
+
+
+
+set CMAKE_ARGS=-DWITH_CUDA=ON ^
+-DCUDA_ARCH_BIN=8.6 ^
+-DCUDA_TOOLKIT_ROOT_DIR="%CUDA_HOME%" ^
+-DWITH_CUDNN=ON ^
+-DCUDNN_VERSION="9.1.0" ^
+-DCUDNN_INCLUDE_DIR="C:/Program Files/NVIDIA/CUDNN/v9.1/include/12.4" ^
+-DCUDNN_LIBRARY="C:/Program Files/NVIDIA/CUDNN/v9.1/lib/12.4/x64/cudnn.lib" ^
+-DCUDNN_DLL="C:/Program Files/NVIDIA/CUDNN/v9.1/bin/12.4/cudnn64_9.dll" ^
+-DENABLE_FAST_MATH=ON ^
+-DBUILD_opencv_world=ON ^
+-DWITH_OPENGL=ON ^
+-DBUILD_opencv_python3=ON ^
+-DBUILD_opencv_sfm=ON ^
+-DCERES_DIR="%CONDA_PREFIX%/Library/lib/cmake/Ceres" ^
+-DCERES_INCLUDE_DIR="%CONDA_PREFIX%/Library/include" ^
+-DCERES_LIBRARY="%CONDA_PREFIX%/Library/lib/ceres.lib" ^
+-DGLOG_INCLUDE_DIR="%CONDA_PREFIX%/Library/include" ^
+-DGLOG_LIBRARY="%CONDA_PREFIX%/Library/lib/glog.lib" ^
+-DGFLAGS_INCLUDE_DIR="%CONDA_PREFIX%/Library/include" ^
+-DGFLAGS_LIBRARY="%CONDA_PREFIX%/Library/lib/gflags_static.lib" ^
+-DVTK_DIR="%CONDA_PREFIX%/Library/lib/cmake/vtk-9.2" ^
+-DBLAS_LIBRARIES="%CONDA_PREFIX%/Library/lib/mkl_rt.lib" ^
+-DLAPACK_LIBRARIES="%CONDA_PREFIX%/Library/lib/mkl_rt.lib" ^
+-DWITH_NVCUVID=OFF ^
+-DWITH_NVCUVENC=OFF ^
+-DWITH_FFMPEG=OFF ^
+-DBUILD_PERF_TESTS=OFF ^
+-DBUILD_TESTS=OFF ^
+-DBUILD_EXAMPLES=OFF ^
+-DINSTALL_PYTHON_EXAMPLES=OFF ^
+-DINSTALL_C_EXAMPLES=OFF ^
+-DOPENCV_ENABLE_NONFREE=ON ^
+-DOPENCV_FORCE_3RDPARTY_BUILD=OFF ^
+-DBUILD_opencv_python_tests=OFF ^
+-DCUDA_NVCC_FLAGS="-allow-unsupported-compiler"
+
+
+
+
+
+
+
+python -m pip install --upgrade pip
+
+
+
+
+
+
+
+pip wheel . --verbose
+
+
+# After the build completes (this will take some time), install the wheel
+pip install dist/opencv_contrib_python-4.5.5*.whl
+
+
+
+
+
+set CMAKE_ARGS=-DWITH_CUDA=ON ^
+-DCMAKE_GENERATOR_PLATFORM=x64 ^
+-DCUDA_ARCH_BIN=8.6 ^
+-DCUDA_TOOLKIT_ROOT_DIR="%CUDA_HOME%" ^
+-DWITH_CUDNN=ON ^
+-DCUDNN_VERSION="9.1.0" ^
+-DCUDNN_INCLUDE_DIR="C:\\Program Files\\NVIDIA\\CUDNN\\v9.1\\include\\12.4" ^
+-DCUDNN_LIBRARY="C:\\Program Files\\NVIDIA\\CUDNN\\v9.1\\lib\\12.4\\x64\\cudnn.lib" ^
+-DCUDNN_DLL="C:\\Program Files\\NVIDIA\\CUDNN\\v9.1\\bin\\12.4\\cudnn64_9.dll" ^
+-DENABLE_FAST_MATH=ON ^
+-DBUILD_opencv_world=ON ^
+-DWITH_OPENGL=ON ^
+-DBUILD_opencv_python3=ON ^
+-DBUILD_opencv_sfm=ON ^
+-DBUILD_opencv_python_bindings_generator=ON ^
+-DEIGEN_INCLUDE_PATH="C:\\Users\\joems\\miniconda3\\envs\\eth3d_reconstruction\\Library\\include\\eigen3" ^
+-DGLOG_INCLUDE_DIR="C:\\Users\\joems\\miniconda3\\envs\\eth3d_reconstruction\\Library\\include" ^
+-DGLOG_LIBRARY="C:\\Users\\joems\\miniconda3\\envs\\eth3d_reconstruction\\Library\\lib\\glog.lib" ^
+-DGFLAGS_INCLUDE_DIR="C:\\Users\\joems\\miniconda3\\envs\\eth3d_reconstruction\\Library\\include" ^
+-DGFLAGS_LIBRARY="C:\\Users\\joems\\miniconda3\\envs\\eth3d_reconstruction\\Library\\lib\\gflags_static.lib" ^
+-DCeres_DIR="C:\\Users\\joems\\miniconda3\\envs\\eth3d_reconstruction\\Library\\lib\\cmake\\Ceres" ^
+-DWITH_VTK=ON ^
+-DVTK_DIR="C:\\Users\\joems\\miniconda3\\envs\\eth3d_reconstruction\\Library\\lib\\cmake\\vtk-9.2" ^
+-DWITH_NVCUVID=OFF ^
+-DWITH_NVCUVENC=OFF ^
+-DWITH_FFMPEG=OFF ^
+-DBUILD_PERF_TESTS=OFF ^
+-DBUILD_TESTS=OFF ^
+-DBUILD_EXAMPLES=OFF ^
+-DINSTALL_PYTHON_EXAMPLES=OFF ^
+-DINSTALL_C_EXAMPLES=OFF ^
+-DOPENCV_ENABLE_NONFREE=ON ^
+-DOPENCV_FORCE_3RDPARTY_BUILD=OFF ^
+-DBUILD_opencv_python_tests=OFF
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+## ------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+## GUI BASED - not working.. 
+
+Prerequisites Check
+
+# 1. Verify environment activation
+conda activate eth3d_reconstruction
+
+# 2. Verify installed dependencies
+python -c "import numpy; print(f'NumPy: {numpy.__version__}')"
+python -c "import torch; print(f'PyTorch: {torch.__version__}, CUDA: {torch.version.cuda}')"
+
+
+# Clone Repositories
+
+cd C:\Users\joems\Projects
+git clone --branch 4.5.5 https://github.com/opencv/opencv.git
+git clone --branch 4.5.5 https://github.com/opencv/opencv_contrib.git
+
+
+
+# CMake GUI Configuration.. USE the CMAKE GUI;
+- Select OpenCV directory, Select build folder.. 
+
+C:\Users\joems\Projects\opencv
+C:\Users\joems\Projects\opencv_contrib
+C:\Users\joems\Projects\opencv_build
+
+
+Source Code: C:\Users\joems\Projects\opencv
+Build Directory: C:\Users\joems\Projects\opencv\build
+Generator: "Visual Studio 16 2019" with x64 platform
+In Specify Generator -> Select VS 2019 as the generator. Select x64 as Platform
+
+
+
+
+
+* Configure first time.
+
+Build for the first time.
+- Tick Check for - WITH CUDA check, ENABLE_FAST_MATH check.
+- Tick Check for - opencv_world
+- OpenCV Extra Modules PATH - C:\Users\joems\Projects\opencv_contrib\modules
+
+- Add variables : 
+CUDNN_INCLUDE_DIR: C:\Program Files\NVIDIA\CUDNN\v9.1\include
+CUDNN_LIBRARY: C:\Program Files\NVIDIA\CUDNN\v9.1\lib\12.4\x64\cudnn.lib
+
+
+## 2. Critical Path Variables
+
+# Python Paths (these should point to your conda environment)
+PYTHON3_EXECUTABLE: C:\Users\joems\miniconda3\envs\eth3d_reconstruction\python.exe
+PYTHON3_INCLUDE_DIR: C:\Users\joems\miniconda3\envs\eth3d_reconstruction\include
+PYTHON3_LIBRARY: C:\Users\joems\miniconda3\envs\eth3d_reconstruction\libs\python310.lib
+PYTHON3_NUMPY_INCLUDE_DIRS: C:\Users\joems\miniconda3\envs\eth3d_reconstruction\Lib\site-packages\numpy\core\include
+PYTHON3_PACKAGES_PATH: C:\Users\joems\miniconda3\envs\eth3d_reconstruction\Lib\site-packages
+
+# CUDA Paths
+CUDA_TOOLKIT_ROOT_DIR: C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.1
+CUDA_SDK_ROOT_DIR: C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.1
+CUDA_FAST_MATH: ON
+CUDA_ARCH_BIN: 8.6
+
+## 3. Essential Flags to Enable
+
+BUILD_opencv_world: ON                    # Creates single library file
+WITH_CUDA: ON                            # Enable CUDA support
+OPENCV_DNN_CUDA: ON                      # Enable CUDA for DNN module
+ENABLE_FAST_MATH: ON                     # Enable fast math optimizations
+OPENCV_ENABLE_NONFREE: ON               # Enable non-free algorithms
+BUILD_opencv_python3: ON                 # Build Python 3 bindings
+INSTALL_PYTHON_EXAMPLES: OFF            # Skip Python examples
+INSTALL_C_EXAMPLES: OFF                 # Skip C examples
+OPENCV_GENERATE_PKGCONFIG: ON           # Generate pkg-config file
+OPENCV_EXTRA_MODULES_PATH: C:\Users\joems\Projects\opencv_contrib\modules
+
+## 4. Important Build Options
+
+# Build Configuration
+CMAKE_BUILD_TYPE: Release               # Set build type to Release
+BUILD_SHARED_LIBS: ON                   # Build shared libraries
+CMAKE_CONFIGURATION_TYPES: Release      # Only build Release config
+
+# CUDA Configuration
+WITH_CUBLAS: ON                         # Enable cuBLAS
+WITH_CUDNN: ON                          # Enable cuDNN
+CUDNN_INCLUDE_DIR: C:\Program Files\NVIDIA\CUDNN\v9.1\include
+CUDNN_LIBRARY: C:\Program Files\NVIDIA\CUDNN\v9.1\lib\12.4\x64\cudnn.lib
+
+# OpenCV Modules
+BUILD_opencv_sfm: ON                    # Structure from Motion module
+BUILD_opencv_viz: OFF                   # Disable Viz (can cause issues)
+
+## 5. Build Directory Structure
+
+OPENCV_BIN_INSTALL_PATH: C:\Users\joems\miniconda3\envs\eth3d_reconstruction\Library\bin
+OPENCV_LIB_INSTALL_PATH: C:\Users\joems\miniconda3\envs\eth3d_reconstruction\Library\lib
+OPENCV_INCLUDE_INSTALL_PATH: C:\Users\joems\miniconda3\envs\eth3d_reconstruction\Library\include
+
+
+
+
+
+## FINALLY, Build and Install
+
+# In VS Code Developer Command Prompt (as Administrator)
+conda activate eth3d_reconstruction
+
+cd C:\Users\joems\Projects\opencv\build
+cmake --build . --target INSTALL --config Release -j 8
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+---
+
+## **Key Methodologies**
+
+- **Feature Detection and Matching**
+- **Structure from Motion (SfM)**
+- **Multi-View Stereo (MVS)**
+- **Point Cloud Processing**
+- **Surface Reconstruction**
+- **Texture Mapping**
+- **Post-Processing and Visualization**
+- **Evaluation and Validation**
+
+---
+
+## **Flow of Methods**
+
+### **1. Data Preparation and Quality Enhancement**
+
+**Objective:** Prepare the ETH3D dataset for processing by organizing images and enhancing quality if necessary.
+
+- **Actions:**
+  - **Select a Scene:**
+    - Choose a suitable scene from the ETH3D High-Resolution Multi-View dataset.
+  - **Data Organization:**
+    - Collect undistorted images and corresponding camera calibration data.
+  - **Quality Enhancement (if needed):**
+    - Apply image preprocessing techniques such as noise reduction or contrast enhancement to improve feature detection.
+    - **Algorithms:**
+      - **Gaussian Blur** to reduce sensor noise.
+      - **Histogram Equalization** to improve contrast.
+    - **Reasoning:**
+      - Enhances the visibility of features, improving the performance of subsequent steps.
+
+**Output:** A set of high-quality, organized images ready for feature detection.
+
+---
+
+### **2. Feature Detection and Matching**
+
+**Objective:** Detect key features in images and establish correspondences between them.
+
+- **Actions:**
+  - **Feature Detection:**
+    - Use algorithms to detect salient features in each image.
+    - **Algorithms:**
+      - **SIFT (Scale-Invariant Feature Transform):**
+        - **Pros:**
+          - Robust to scale and rotation.
+          - Handles changes in illumination.
+        - **Cons:**
+          - Computationally intensive.
+          - Patent restrictions (may not be an issue for academic projects).
+      - **ORB (Oriented FAST and Rotated BRIEF):**
+        - **Pros:**
+          - Fast and efficient.
+          - Open-source and free of patent restrictions.
+        - **Cons:**
+          - Less robust than SIFT in complex scenes.
+      - **Recommendation:**
+        - **Use SIFT** if computational resources permit for better robustness.
+        - Otherwise, **use ORB** for faster processing.
+  - **Feature Matching:**
+    - Match features across images to find correspondences.
+    - **Algorithms:**
+      - **FLANN (Fast Library for Approximate Nearest Neighbors):**
+        - Efficient for large datasets.
+      - **Brute-Force Matcher:**
+        - Simpler but slower.
+    - **Outlier Rejection:**
+      - Apply **Lowe's Ratio Test** to filter out false matches.
+      - Use **RANSAC (Random Sample Consensus)** to estimate geometric transformations and eliminate outliers.
+    - **Reasoning:**
+      - Accurate feature matching is critical for reliable reconstruction.
+      - Outlier rejection improves the robustness of matches.
+
+**Output:** A set of matched features with outliers removed, ready for camera pose estimation.
+
+---
+
+### **3. Structure from Motion (SfM)**
+
+**Objective:** Estimate camera poses and create a sparse 3D point cloud from matched features.
+
+- **Actions:**
+  - **Camera Pose Estimation:**
+    - Recover camera intrinsic and extrinsic parameters.
+    - **Algorithms:**
+      - **Essential Matrix Estimation** (for calibrated cameras).
+      - **Fundamental Matrix Estimation** (for uncalibrated cameras).
+  - **Bundle Adjustment:**
+    - Optimize camera parameters and 3D point positions to minimize reprojection error.
+    - **Algorithms:**
+      - **Levenberg-Marquardt Optimization** for non-linear least squares.
+    - **Reasoning:**
+      - Bundle adjustment refines the reconstruction for better accuracy.
+  - **Use of Existing Tools:**
+    - **COLMAP** or **OpenMVG** for implementing SfM pipeline.
+    - **Recommendation:**
+      - **Use COLMAP** due to its robustness and comprehensive features.
+
+**Output:** Estimated camera poses and a sparse 3D point cloud representing the scene structure.
+
+---
+
+### **4. Multi-View Stereo (MVS)**
+
+**Objective:** Generate a dense 3D point cloud from the sparse SfM output.
+
+- **Actions:**
+  - **Depth Map Estimation:**
+    - Compute depth maps for each image using stereo matching.
+    - **Algorithms:**
+      - **PatchMatch Stereo:**
+        - Fast and effective for high-resolution images.
+      - **Semi-Global Matching (SGM):**
+        - Balances accuracy and computational efficiency.
+    - **Reasoning:**
+      - Produces detailed depth information essential for dense reconstruction.
+  - **Depth Map Fusion:**
+    - Combine depth maps into a single dense point cloud.
+    - Handle occlusions and inconsistent points.
+    - **Algorithms:**
+      - **Fusion Techniques in COLMAP** or **OpenMVS**.
+    - **Use of Existing Tools:**
+      - Continue using **COLMAP** for seamless integration.
+
+**Output:** A dense 3D point cloud capturing fine details of the scene.
+
+---
+
+### **5. Point Cloud Processing**
+
+**Objective:** Clean and prepare the dense point cloud for surface reconstruction.
+
+- **Actions:**
+  - **Outlier Removal:**
+    - Remove noise and spurious points.
+    - **Algorithms:**
+      - **Statistical Outlier Removal (SOR):**
+        - Removes points that are statistically distant from neighbors.
+      - **Radius Outlier Removal (ROR):**
+        - Eliminates points with insufficient neighboring points within a radius.
+    - **Reasoning:**
+      - Enhances the quality of the point cloud, leading to better surface reconstruction.
+  - **Downsampling (if necessary):**
+    - Reduce the number of points to manage computational load.
+    - **Algorithms:**
+      - **Voxel Grid Downsampling:**
+        - Averages points within a voxel grid.
+    - **Trade-off:**
+      - Balances detail preservation with computational efficiency.
+
+**Output:** A cleaned and possibly downsampled dense point cloud ready for surface reconstruction.
+
+---
+
+### **6. Surface Reconstruction**
+
+**Objective:** Create a mesh from the dense point cloud.
+
+- **Actions:**
+  - **Normal Estimation:**
+    - Compute normals for each point, required for certain reconstruction algorithms.
+    - **Algorithms:**
+      - **K-nearest neighbors (k-NN):**
+        - Estimate normals based on local neighborhoods.
+    - **Reasoning:**
+      - Accurate normals are essential for high-quality surface reconstruction.
+  - **Mesh Generation:**
+    - **Algorithms:**
+      - **Poisson Surface Reconstruction:**
+        - Produces smooth, watertight meshes.
+        - **Pros:**
+          - Handles noise well.
+          - Suitable for detailed models.
+        - **Cons:**
+          - Computationally intensive.
+      - **Delaunay Triangulation:**
+        - Constructs meshes by connecting points to form tetrahedra.
+        - **Pros:**
+          - Faster computation.
+          - Good for well-sampled datasets.
+        - **Cons:**
+          - May produce holes in sparse areas.
+    - **Recommendation:**
+      - **Use Poisson Surface Reconstruction** for high-quality meshes.
+    - **Implementation:**
+      - Utilize libraries like **Open3D** or **Meshlab**.
+
+**Output:** A 3D mesh representing the surface of the scene.
+
+---
+
+### **7. Texture Mapping**
+
+**Objective:** Apply textures from the original images to the mesh for realistic visualization.
+
+- **Actions:**
+  - **UV Unwrapping:**
+    - Flatten the mesh surface onto a 2D plane to create UV maps.
+    - **Tools:**
+      - **Blender** for manual control.
+      - Automated tools in **COLMAP** or **OpenMVS**.
+  - **Texture Extraction:**
+    - Project images onto the mesh using camera poses.
+    - **Algorithms:**
+      - **View Selection:**
+        - Choose the best image for each part of the mesh based on viewing angle and resolution.
+      - **Texture Blending:**
+        - Blend textures from multiple images to avoid seams.
+        - **Methods:**
+          - Weighted averaging.
+          - Graph-cut optimization.
+    - **Reasoning:**
+      - Enhances visual realism and hides artifacts from reconstruction.
+
+**Output:** A textured 3D mesh ready for visualization.
+
+---
+
+### **8. Post-Processing and Visualization**
+
+**Objective:** Refine the mesh and prepare visualizations.
+
+- **Actions:**
+  - **Mesh Refinement:**
+    - **Smoothing:**
+      - Apply **Laplacian Smoothing** to reduce minor artifacts.
+    - **Simplification:**
+      - Reduce the number of faces for performance.
+      - **Algorithms:**
+        - **Quadric Edge Collapse Decimation.**
+    - **Reasoning:**
+      - Improves mesh quality and ensures smooth rendering.
+  - **Visualization:**
+    - Use visualization tools to inspect the model.
+    - **Tools:**
+      - **Meshlab**, **Blender**, or **Open3D**.
+    - **Techniques:**
+      - Generate interactive renderings.
+      - Create cross-sectional views or animations.
+  - **Exporting Results:**
+    - Export the mesh in standard formats (e.g., OBJ, PLY) for sharing or further analysis.
+
+**Output:** A refined and visually appealing 3D model of the scene.
+
+---
+
+### **9. Evaluation and Validation**
+
+**Objective:** Assess the accuracy and quality of the reconstructed model.
+
+- **Actions:**
+  - **Quantitative Evaluation:**
+    - Compare the reconstructed model with ground truth data.
+    - **Metrics:**
+      - **Chamfer Distance:**
+        - Measures the average distance between points in two point clouds.
+      - **Hausdorff Distance:**
+        - Measures the maximum distance from a point in one set to the closest point in the other set.
+    - **Reasoning:**
+      - Provides objective measures of reconstruction accuracy.
+  - **Qualitative Evaluation:**
+    - Visual inspection of the model for artifacts or inaccuracies.
+    - Identify areas where the reconstruction may have failed (e.g., reflective surfaces, textureless regions).
+  - **Documentation:**
+    - Record observations, parameter settings, and any issues encountered.
+    - Include screenshots or renderings in the report.
+
+**Output:** A comprehensive evaluation report detailing the performance of the reconstruction.
+
+---
+
+## **Resources and Libraries**
+
+- **Datasets:**
+  - **ETH3D High-Resolution Multi-View Dataset**
+    - Provides high-quality images, camera calibration, and ground truth data.
+
+- **Software Tools:**
+  - **COLMAP:**
+    - For Structure from Motion and Multi-View Stereo.
+    - **Link:** [COLMAP GitHub Repository](https://github.com/colmap/colmap)
+  - **OpenMVS:**
+    - For dense reconstruction and mesh generation.
+    - **Link:** [OpenMVS GitHub Repository](https://github.com/cdcseacave/openMVS)
+  - **Meshlab:**
+    - For mesh processing and visualization.
+    - **Link:** [Meshlab](https://www.meshlab.net/)
+  - **Blender:**
+    - For UV mapping, texture baking, and advanced visualization.
+    - **Link:** [Blender](https://www.blender.org/)
+  - **Open3D:**
+    - For point cloud and mesh processing.
+    - **Link:** [Open3D](http://www.open3d.org/)
+  - **OpenCV:**
+    - For image processing and feature detection if custom implementation is needed.
+    - **Link:** [OpenCV](https://opencv.org/)
+
+---
+
+## **Algorithms and Their Benefits**
+
+### **Feature Detection and Matching**
+
+- **SIFT:**
+  - **Benefit:** High robustness to scale, rotation, and illumination changes.
+  - **Use Case:** Ideal for complex scenes with varying textures.
+
+- **ORB:**
+  - **Benefit:** Fast and efficient; suitable for real-time applications.
+  - **Use Case:** When computational resources are limited.
+
+### **Structure from Motion**
+
+- **Bundle Adjustment:**
+  - **Benefit:** Optimizes camera parameters and 3D points for accurate reconstruction.
+  - **Use Case:** Essential for reducing errors accumulated during pose estimation.
+
+### **Multi-View Stereo**
+
+- **PatchMatch Stereo:**
+  - **Benefit:** Efficient and effective for high-resolution images.
+  - **Use Case:** Produces detailed depth maps for dense reconstruction.
+
+### **Surface Reconstruction**
+
+- **Poisson Surface Reconstruction:**
+  - **Benefit:** Generates smooth, watertight meshes, handling noise well.
+  - **Use Case:** Preferred when high-quality meshes are required.
+
+### **Texture Mapping**
+
+- **Texture Blending with Graph-Cut Optimization:**
+  - **Benefit:** Seamless textures without visible seams.
+  - **Use Case:** Enhances visual realism, especially important for presentations.
+
+---
+
+## **Reasoning Behind Algorithm Choices**
+
+- **Accuracy vs. Efficiency:**
+  - **SIFT** is chosen over faster methods like ORB when accuracy is paramount, and computational resources are sufficient.
+- **Quality of Reconstruction:**
+  - **Poisson Surface Reconstruction** is preferred for its ability to produce high-quality meshes despite being computationally intensive.
+- **Integration and Compatibility:**
+  - **COLMAP** is used for both SfM and MVS to ensure compatibility and streamline the workflow.
+- **Resource Constraints:**
+  - Algorithms and tools are selected based on available hardware (e.g., leveraging GPU acceleration where possible).
+
+---
+
+
+
+
+## **Overall Pipeline for 3D Reconstruction from Sensorless 2D Scans**
+
+### **Step 1: Data Acquisition**
+
+**Objective:** Collect raw 2D images that will be used for reconstruction.
+
+- **Input:** Raw 2D images from an imaging modality (e.g., ultrasound scans, optical images).
+- **Process:**
+  - Perform a freehand scan using an imaging device without any external tracking systems.
+  - Capture a sequence of 2D images as the probe or camera moves.
+- **Output:** A sequential set of 2D images (frames) representing different perspectives or positions.
+
+**Transformation:** Real-world scenes or internal anatomical structures are captured as 2D image sequences, providing the foundational data for reconstruction.
+
+---
+
+### **Step 2: Preprocessing of Images**
+
+**Objective:** Enhance image quality and prepare data for further processing.
+
+- **Input:** Raw 2D images from data acquisition.
+- **Process:**
+  - **Noise Reduction:** Apply filters (e.g., median, Gaussian) to reduce noise and speckle, especially important in ultrasound images.
+  - **Normalization:** Adjust intensity values for consistency across frames.
+  - **Contrast Enhancement:** Use techniques like histogram equalization to improve feature visibility.
+- **Output:** Preprocessed images with improved quality.
+
+**Transformation:** Raw images are enhanced to emphasize features and reduce artifacts, facilitating more accurate motion estimation.
+
+---
+
+### **Step 3: Motion Estimation Between Frames**
+
+**Objective:** Determine the relative movement (translation and rotation) between consecutive frames.
+
+- **Input:** Preprocessed 2D images.
+- **Process:**
+  - **Feature Detection and Matching:**
+    - Detect keypoints/features in each frame using algorithms like ORB, SIFT, or SURF.
+    - Match features between consecutive frames to find correspondences.
+  - **Motion Estimation Algorithms:**
+    - Compute the transformation matrix (rigid or affine) that best aligns matched features.
+    - Use methods like the RANSAC algorithm to estimate robust transformations and reject outliers.
+    - Optionally, use optical flow methods (e.g., Lucas-Kanade) to estimate pixel-wise motion.
+- **Output:** A sequence of estimated transformations (rotation matrices and translation vectors) between frames.
+
+**Transformation:** The sequential images are now associated with spatial relationships, allowing us to understand how the imaging device moved between captures.
+
+---
+
+### **Step 4: Global Pose Estimation**
+
+**Objective:** Determine the position and orientation (pose) of each frame in a global coordinate system.
+
+- **Input:** Relative transformations between frames.
+- **Process:**
+  - **Cumulative Transformation:**
+    - Initialize the first frame's pose as the origin.
+    - Apply successive transformations to accumulate the pose of each frame relative to the starting position.
+  - **Pose Graph Optimization (Optional):**
+    - Construct a pose graph where nodes represent frame poses and edges represent relative transformations.
+    - Optimize the graph to minimize inconsistencies and drift over time using techniques like bundle adjustment.
+- **Output:** Absolute poses (positions and orientations) of all frames in a global coordinate system.
+
+**Transformation:** Relative movements are integrated to place all frames within a common spatial framework, setting the stage for reconstructing the 3D structure.
+
+---
+
+### **Step 5: Mapping 2D Pixels to 3D Space**
+
+**Objective:** Project 2D image data into 3D space based on the estimated poses.
+
+- **Input:**
+  - Preprocessed 2D images.
+  - Absolute poses of each frame.
+- **Process:**
+  - **Pixel-to-Voxel Mapping:**
+    - For each pixel in a frame, determine its corresponding location in 3D space using the pose information.
+    - Use geometric transformations to map 2D pixel coordinates to 3D coordinates.
+    - Incorporate intrinsic parameters of the imaging device if available (e.g., focal length).
+  - **Intensity Assignment:**
+    - Assign the pixel's intensity value to the corresponding location in the 3D space.
+- **Output:** A set of 3D points (with intensity values) representing the scanned volume.
+
+**Transformation:** The 2D image data is projected into 3D space, creating a point cloud or voxel representation of the scanned area.
+
+---
+
+### **Step 6: Volume Reconstruction**
+
+**Objective:** Construct a continuous 3D volume from the mapped 3D points.
+
+- **Input:** 3D points with intensity values.
+- **Process:**
+  - **Voxel Grid Initialization:**
+    - Define a 3D voxel grid that encompasses the entire scanned area.
+    - Determine grid resolution based on desired detail and computational resources.
+  - **Data Integration:**
+    - Accumulate intensity values into corresponding voxels.
+    - Handle overlapping contributions by averaging or weighting intensities.
+  - **Interpolation:**
+    - Use interpolation methods (e.g., trilinear interpolation) to fill gaps and smooth the volume.
+    - Address empty voxels by interpolating from neighboring data points.
+- **Output:** A complete 3D volumetric representation of the scanned area.
+
+**Transformation:** Discrete 3D points are transformed into a continuous volumetric model, representing the internal structure of the subject.
+
+---
+
+### **Step 7: Post-processing and Visualization**
+
+**Objective:** Enhance the reconstructed volume for analysis and display.
+
+- **Input:** Reconstructed 3D volume.
+- **Process:**
+  - **Filtering:**
+    - Apply smoothing filters to reduce noise.
+    - Use morphological operations to enhance structural features.
+  - **Segmentation (Optional):**
+    - Segment the volume to isolate regions of interest (e.g., organs, tumors).
+  - **Visualization:**
+    - Generate cross-sectional slices in different planes (axial, sagittal, coronal).
+    - Render 3D images using volume rendering techniques.
+    - Create surface meshes for 3D printing or further analysis.
+- **Output:** Enhanced 3D images and visualizations ready for interpretation or presentation.
+
+**Transformation:** The raw volume data is processed to improve quality and is visualized in a manner that aids understanding and decision-making.
+
+---
+
+### **Step 8: Validation and Evaluation**
+
+**Objective:** Assess the accuracy and quality of the reconstructed volume.
+
+- **Input:** Reconstructed volume and, if available, ground truth data.
+- **Process:**
+  - **Quantitative Metrics:**
+    - Calculate errors between reconstructed volume and ground truth (e.g., RMSE, SSIM).
+    - Measure dimensions and compare with known values.
+  - **Qualitative Assessment:**
+    - Visual inspection by experts.
+    - Comparison with expected anatomical structures.
+- **Output:** Evaluation results indicating the performance of the reconstruction.
+
+**Transformation:** The reconstructed volume is analyzed to validate its accuracy, guiding further refinements or confirming its utility.
+
+---
+
+## **Explanation of How Each Step Transforms the Work**
+
+1. **Data Acquisition:**
+   - Captures the essential information from the real world into digital form.
+   - Establishes the foundation for all subsequent processing.
+
+2. **Preprocessing:**
+   - Enhances data quality, making it suitable for reliable analysis.
+   - Reduces the impact of noise and artifacts on motion estimation.
+
+3. **Motion Estimation:**
+   - Extracts spatial relationships between frames.
+   - Converts sequential images into spatially related data points.
+   - Essential for understanding how to place each frame in the 3D space.
+
+4. **Global Pose Estimation:**
+   - Integrates relative movements into a coherent global framework.
+   - Addresses drift and inconsistencies through optimization.
+   - Critical for accurate mapping of data into 3D space.
+
+5. **Mapping 2D Pixels to 3D Space:**
+   - Projects image data into three dimensions based on poses.
+   - Transforms 2D information into a spatial representation.
+   - Bridges the gap between image space and object space.
+
+6. **Volume Reconstruction:**
+   - Organizes the 3D points into a structured volumetric form.
+   - Creates a continuous model that represents the scanned area.
+   - Facilitates analysis, visualization, and further processing.
+
+7. **Post-processing and Visualization:**
+   - Enhances the visual quality of the volume.
+   - Allows for interpretation and interaction with the data.
+   - Prepares the data for clinical or research applications.
+
+8. **Validation and Evaluation:**
+   - Assesses the accuracy and reliability of the reconstruction.
+   - Provides feedback for improvements.
+   - Ensures that the final output meets the required standards.
+
+---
+
+## **Testing and Independent Verification at Each Step**
+
+### **Testing Motion Estimation:**
+
+- **Objective:** Ensure that the estimated motions between frames are accurate.
+- **Methods:**
+  - Use synthetic sequences with known transformations to validate the algorithm.
+  - Visualize matched features and overlay transformed images.
+  - Analyze the consistency and smoothness of estimated motions over time.
+
+### **Testing Volume Reconstruction:**
+
+- **Objective:** Verify that the mapping from 2D frames to the 3D volume is correct.
+- **Methods:**
+  - Use phantoms with known geometries to compare the reconstructed volume against ground truth.
+  - Extract slices from the volume and compare them with original frames.
+  - Calculate quantitative metrics to assess reconstruction quality.
+
+### **Testing the Full Pipeline:**
+
+- **Objective:** Evaluate the overall performance and identify areas for improvement.
+- **Methods:**
+  - Integrate the components and test with real data.
+  - Conduct end-to-end testing to ensure smooth data flow.
+  - Solicit expert feedback on the usability and accuracy of the final volume.
+
+---
+
+
+
+
+
+
+ I'll provide multiple algorithm options, discuss their pros and cons, and recommend the best choice based on your project's requirements and constraints.
+
+---
+
+## **1. Image Quality Enhancement**
+
+**Objective:** Enhance raw 2D ultrasound images to improve the performance of subsequent steps, especially motion estimation.
+
+### **Algorithms and Methods**
+
+### **a) Noise Reduction**
+
+Ultrasound images are notorious for speckle noise, which is a granular interference that degrades image quality. Effective noise reduction is crucial.
+
+1. **Speckle Reducing Anisotropic Diffusion (SRAD)**
+
+   - **Description:** An extension of the anisotropic diffusion filter tailored specifically for speckle noise.
+   - **Pros:**
+     - Preserves edges and important features.
+     - Reduces speckle noise effectively.
+   - **Cons:**
+     - Computationally intensive.
+     - Requires careful tuning of parameters.
+   - **Recommendation:** Highly recommended for ultrasound images due to its effectiveness in speckle noise reduction.
+
+2. **Non-Local Means (NLM) Filter**
+
+   - **Description:** A denoising algorithm that averages all pixels in the image, weighted by the similarity between a small patch centered on the pixel and the small patch centered on the target pixel.
+   - **Pros:**
+     - Preserves fine details and textures.
+     - Effective for various types of noise.
+   - **Cons:**
+     - Computationally intensive, especially for large images.
+   - **Recommendation:** A good alternative if computational resources allow.
+
+3. **Median Filter**
+
+   - **Description:** Replaces each pixel's value with the median value of neighboring pixels.
+   - **Pros:**
+     - Simple and fast.
+     - Effective for salt-and-pepper noise.
+   - **Cons:**
+     - Less effective for speckle noise.
+     - Can blur edges if the window size is large.
+   - **Recommendation:** Not ideal for speckle noise but can be used as a preliminary step due to its simplicity.
+
+4. **Wavelet Denoising**
+
+   - **Description:** Decomposes the image into wavelet coefficients, thresholds the coefficients, and reconstructs the image.
+   - **Pros:**
+     - Good balance between noise reduction and detail preservation.
+   - **Cons:**
+     - Complexity in choosing appropriate wavelet functions and thresholding techniques.
+   - **Recommendation:** Useful if you are familiar with wavelet transforms.
+
+### **b) Normalization and Contrast Enhancement**
+
+1. **Adaptive Histogram Equalization (AHE)**
+
+   - **Description:** Improves contrast by transforming the values in the intensity histogram locally.
+   - **Pros:**
+     - Enhances local contrast and edges.
+   - **Cons:**
+     - Can amplify noise.
+   - **Recommendation:** Suitable for improving local contrast but may need to be combined with noise reduction techniques.
+
+2. **Contrast Limited Adaptive Histogram Equalization (CLAHE)**
+
+   - **Description:** An improved version of AHE that limits the amplification of noise by clipping the histogram at a predefined value.
+   - **Pros:**
+     - Reduces the risk of noise over-amplification.
+     - Enhances local contrast effectively.
+   - **Cons:**
+     - Requires tuning of the clip limit parameter.
+   - **Recommendation:** Preferred over AHE for ultrasound images due to better noise management.
+
+3. **Z-Score Normalization**
+
+   - **Description:** Standardizes the image intensities to have zero mean and unit variance.
+   - **Pros:**
+     - Reduces the impact of outliers.
+   - **Cons:**
+     - Assumes intensity values are normally distributed.
+   - **Recommendation:** Can be applied after noise reduction and contrast enhancement.
+
+### **Recommendation for Step 1**
+
+- **Noise Reduction:** Use the **Speckle Reducing Anisotropic Diffusion (SRAD)** filter for effective speckle noise reduction.
+- **Contrast Enhancement:** Apply **CLAHE** to enhance local contrast without amplifying noise excessively.
+- **Normalization:** Use **Min-Max Normalization** to scale pixel values to a consistent range (e.g., 0 to 1) after applying noise reduction and contrast enhancement.
+
+**Implementation Tips:**
+
+- Use established libraries like **ITK** or **scikit-image** for implementing SRAD and CLAHE.
+- Validate the preprocessing by visually inspecting the images and ensuring that features are preserved while noise is reduced.
+
+---
+
+## **2. Motion Estimation on 2D Images**
+
+**Objective:** Estimate the relative movement (translation and rotation) between consecutive frames to understand the probe's motion.
+
+### **Algorithms and Methods**
+
+### **a) Feature-Based Methods**
+
+1. **Scale-Invariant Feature Transform (SIFT)**
+
+   - **Pros:**
+     - Robust to scale and rotation changes.
+     - Good for images with distinct features.
+   - **Cons:**
+     - Computationally intensive.
+     - Ultrasound images often lack distinct features.
+   - **Recommendation:** Less suitable due to the nature of ultrasound images.
+
+2. **Oriented FAST and Rotated BRIEF (ORB)**
+
+   - **Pros:**
+     - Fast and efficient.
+     - Good for real-time applications.
+   - **Cons:**
+     - Performance degrades with noisy images.
+   - **Recommendation:** May be attempted but not expected to perform optimally on ultrasound data.
+
+### **b) Optical Flow Methods**
+
+1. **Lucas-Kanade Optical Flow with Image Pyramids**
+
+   - **Description:** Estimates motion between two images by assuming that the flow is essentially constant in a local neighborhood of the pixel under consideration.
+   - **Pros:**
+     - Effective for small, continuous motions.
+     - Pyramids help in handling larger motions by processing at multiple scales.
+   - **Cons:**
+     - Assumes brightness constancy and small motion between frames.
+     - Sensitive to noise, which is mitigated by preprocessing.
+   - **Recommendation:** Suitable for your application, especially when combined with good preprocessing.
+
+2. **Horn-Schunck Optical Flow**
+
+   - **Pros:**
+     - Provides a global motion estimation.
+   - **Cons:**
+     - Sensitive to noise.
+     - Computationally more intensive than Lucas-Kanade.
+   - **Recommendation:** Less preferred due to sensitivity to noise in ultrasound images.
+
+3. **Farnebäck Optical Flow**
+
+   - **Pros:**
+     - Dense optical flow estimation.
+   - **Cons:**
+     - May struggle with large displacements.
+   - **Recommendation:** Could be considered but may not offer significant advantages over Lucas-Kanade.
+
+### **c) Phase Correlation**
+
+- **Description:** Estimates the relative translative movement between two images using the Fourier shift theorem.
+- **Pros:**
+  - Robust to noise and uniform illumination changes.
+  - Fast computation using FFTs.
+- **Cons:**
+  - Primarily estimates translation, not rotation.
+- **Recommendation:** Useful if rotations are minimal; otherwise, may not suffice.
+
+### **d) Deep Learning-Based Methods**
+
+1. **FlowNet, PWC-Net**
+
+   - **Pros:**
+     - Capable of handling complex motions and deformations.
+   - **Cons:**
+     - Requires large datasets for training.
+     - High computational requirements.
+   - **Recommendation:** Likely impractical within your project's timeframe and computational resources.
+
+### **Recommendation for Step 2**
+
+- **Primary Choice:** Implement **Lucas-Kanade Optical Flow with Image Pyramids**.
+  - **Justification:** Balances accuracy and computational efficiency; suitable for small to moderate motions; can handle larger motions with pyramids.
+- **Enhancements:**
+  - Use **Good Features to Track** (Shi-Tomasi corner detection) to select keypoints.
+  - Ensure images are well preprocessed to reduce the impact of noise.
+
+**Implementation Tips:**
+
+- Use **OpenCV**'s implementation of Lucas-Kanade Optical Flow with Pyramids.
+- Validate motion estimation by overlaying consecutive frames after applying estimated motion to check alignment.
+
+---
+
+## **3. Global Pose Estimation**
+
+**Objective:** Compute the absolute position and orientation (pose) of each frame in a common coordinate system.
+
+### **Algorithms and Methods**
+
+### **a) Sequential Transformation Accumulation**
+
+- **Description:** Initialize the first frame's pose and sequentially apply relative transformations to compute subsequent poses.
+- **Pros:**
+  - Simple and straightforward.
+  - Easy to implement.
+- **Cons:**
+  - Accumulates errors over time (drift).
+- **Recommendation:** A good starting point; acceptable for short sequences where drift is minimal.
+
+### **b) Pose Graph Optimization**
+
+- **Description:** Constructs a graph of poses connected by relative transformations and optimizes the global pose configuration to minimize errors.
+- **Pros:**
+  - Reduces drift and inconsistencies.
+- **Cons:**
+  - More complex to implement.
+  - Requires solving a non-linear optimization problem.
+- **Recommendation:** Consider if drift becomes a significant issue.
+
+### **c) Simultaneous Localization and Mapping (SLAM)**
+
+- **Description:** Simultaneously estimates the trajectory and builds a map; often uses loop closure detection to correct drift.
+- **Pros:**
+  - Robust to drift over long sequences.
+- **Cons:**
+  - High complexity.
+  - May be overkill for your application.
+- **Recommendation:** Likely beyond the scope of your project.
+
+### **Recommendation for Step 3**
+
+- **Primary Choice:** Use **Sequential Transformation Accumulation**.
+  - **Justification:** Simpler to implement and sufficient for short sequences where drift is not severe.
+- **Enhancements:**
+  - Monitor cumulative error; if drift is significant, consider implementing **Pose Graph Optimization** using libraries like **g2o** or **Ceres Solver**.
+
+**Implementation Tips:**
+
+- Represent poses using homogeneous transformation matrices for consistency.
+- Validate poses by plotting the estimated trajectory in 3D space.
+
+---
+
+## **4. Mapping 2D Pixels to 3D Space**
+
+**Objective:** Project 2D pixel coordinates into 3D space using the estimated poses and imaging geometry.
+
+### **Algorithms and Methods**
+
+### **a) Forward Projection**
+
+- **Description:** Maps each pixel from the 2D image into 3D space using the known pose and imaging parameters.
+- **Pros:**
+  - Direct and intuitive.
+- **Cons:**
+  - May result in uneven sampling in 3D space.
+- **Implementation:**
+  - For each pixel \((u, v)\), compute its position in 3D space \((X, Y, Z)\) using the following steps:
+    - Use imaging geometry to compute the 3D coordinates in the camera/probe frame.
+    - Apply the pose transformation to get global coordinates.
+
+### **b) Considering Imaging Geometry**
+
+- **Linear Probe:**
+  - The ultrasound beam is perpendicular to the probe surface.
+  - Depth corresponds directly to the Z-axis.
+- **Sector/Phased Array Probe:**
+  - Ultrasound beams fan out from a point.
+  - Angles need to be considered in mapping.
+
+### **Recommendation for Step 4**
+
+- **Primary Choice:** Implement **Forward Projection** with accurate modeling of the probe's imaging geometry.
+  - **Justification:** Simpler and sufficient for building the 3D point cloud or voxel grid.
+- **Implementation Steps:**
+  - Obtain or estimate the probe's intrinsic parameters (e.g., pixel size, depth scaling, beam angles).
+  - For each pixel, compute its depth based on the image's scan conversion (if necessary).
+  - Apply the pose transformation to get global coordinates.
+
+**Implementation Tips:**
+
+- Use appropriate coordinate transformations.
+- Validate the mapping by visualizing the 3D points corresponding to known structures.
+
+---
+
+## **5. Volume Reconstruction**
+
+**Objective:** Construct a continuous 3D volume from the mapped 3D points.
+
+### **Algorithms and Methods**
+
+### **a) Voxel Grid Construction**
+
+- **Description:** Define a 3D grid (voxel grid) that encompasses the entire scanned volume.
+- **Parameters:**
+  - Voxel size: Determines the resolution of the volume.
+  - Grid dimensions: Based on the range of your 3D points.
+
+### **b) Intensity Accumulation**
+
+1. **Nearest-Neighbor Assignment**
+
+   - **Description:** Assign each 3D point's intensity to the nearest voxel.
+   - **Pros:**
+     - Simple and fast.
+   - **Cons:**
+     - Can produce a blocky appearance.
+   - **Recommendation:** Good starting point.
+
+2. **Trilinear Interpolation**
+
+   - **Description:** Distributes the intensity of each point to the surrounding voxels based on proximity.
+   - **Pros:**
+     - Produces smoother volumes.
+   - **Cons:**
+     - Slightly more computationally intensive.
+   - **Recommendation:** Preferred for better volume quality.
+
+3. **Weighted Averaging**
+
+   - **Description:** When multiple points contribute to the same voxel, average their intensities.
+   - **Pros:**
+     - Reduces artifacts from overlapping data.
+   - **Cons:**
+     - Needs to keep track of the number of contributions per voxel.
+   - **Recommendation:** Essential for consistent intensity representation.
+
+### **c) Handling Data Sparsity**
+
+- **Sparse Voxel Grids:**
+  - Store only voxels that contain data to save memory.
+  - Use data structures like hash tables or octrees.
+
+### **Recommendation for Step 5**
+
+- **Primary Choice:** Use **Trilinear Interpolation** combined with **Weighted Averaging**.
+  - **Justification:** Balances quality and computational efficiency.
+- **Implementation Steps:**
+  - For each 3D point:
+    - Identify the surrounding voxels.
+    - Compute weights based on the point's proximity to voxel centers.
+    - Accumulate weighted intensities and keep track of total weights per voxel.
+- **Data Structures:**
+  - Use numpy arrays for voxel grids if memory allows.
+  - For larger volumes, consider sparse representations.
+
+**Implementation Tips:**
+
+- Initialize the voxel grid with zeros.
+- After accumulation, normalize voxel intensities by dividing by the total weights.
+
+---
+
+## **6. Post-Processing and Visualization**
+
+**Objective:** Enhance the reconstructed volume and generate visualizations for analysis.
+
+### **Algorithms and Methods**
+
+### **a) Smoothing Filters**
+
+1. **3D Gaussian Filter**
+
+   - **Description:** Applies a Gaussian kernel in 3D to smooth the volume.
+   - **Pros:**
+     - Reduces noise.
+     - Smooths out minor artifacts.
+   - **Cons:**
+     - Can blur edges if the kernel size is large.
+   - **Recommendation:** Use a small kernel size to balance smoothing and edge preservation.
+
+2. **3D Median Filter**
+
+   - **Description:** Replaces each voxel's value with the median of neighboring voxel intensities.
+   - **Pros:**
+     - Preserves edges better than Gaussian.
+   - **Cons:**
+     - Computationally intensive.
+   - **Recommendation:** Consider if edge preservation is critical.
+
+### **b) Visualization Techniques**
+
+1. **Volume Rendering**
+
+   - **Description:** Directly render the 3D volume data to generate images.
+   - **Pros:**
+     - Provides comprehensive visualization of internal structures.
+   - **Cons:**
+     - Computationally intensive.
+     - Requires setting up transfer functions to map intensities to colors and opacities.
+   - **Recommendation:** Use if computational resources permit and for final presentation.
+
+2. **Slicing**
+
+   - **Description:** Extract 2D cross-sectional images from the 3D volume.
+   - **Pros:**
+     - Simple to implement.
+     - Allows detailed examination of specific planes.
+   - **Cons:**
+     - Does not provide a complete 3D perspective.
+   - **Recommendation:** Useful for validation and analysis.
+
+3. **Surface Rendering**
+
+   - **Description:** Extract surfaces using methods like the Marching Cubes algorithm.
+   - **Pros:**
+     - Generates mesh models for visualization and 3D printing.
+   - **Cons:**
+     - Requires well-defined surfaces.
+     - Ultrasound data may not have clear isosurfaces.
+   - **Recommendation:** May be challenging with ultrasound data but can be attempted for structures with distinct boundaries.
+
+### **c) Intensity Normalization**
+
+- **Description:** Adjust voxel intensities to a consistent range for better visualization.
+- **Methods:**
+  - Histogram stretching.
+  - Contrast adjustment.
+
+### **Recommendation for Step 6**
+
+- **Primary Choice:** Apply a **3D Gaussian Filter** with a small kernel size for smoothing.
+- **Visualization:**
+  - Use **Slicing** to inspect the volume at different planes.
+  - Implement **Volume Rendering** for comprehensive visualization if feasible.
+- **Normalization:**
+  - Normalize voxel intensities to enhance contrast and visibility.
+
+**Implementation Tips:**
+
+- Use visualization libraries like **VTK** or **Mayavi** for rendering.
+- Adjust visualization parameters (e.g., opacity, color maps) to highlight features of interest.
+
+---
+
+## **Final Notes and Implementation Plan**
+
+### **Implementation Order and Testing**
+
+1. **Start with Image Preprocessing (Step 1):**
+   - Implement and test noise reduction and contrast enhancement.
+   - Validate by visual inspection of preprocessed images.
+
+2. **Proceed to Motion Estimation (Step 2):**
+   - Implement Lucas-Kanade Optical Flow.
+   - Test on consecutive frames and visualize motion vectors.
+   - Validate by checking the alignment of frames after applying estimated motion.
+
+3. **Implement Global Pose Estimation (Step 3):**
+   - Accumulate transformations to compute global poses.
+   - Plot the estimated trajectory to identify any drift.
+
+4. **Map Pixels to 3D Space (Step 4):**
+   - Compute 3D coordinates for pixels.
+   - Visualize the resulting point cloud to ensure correct mapping.
+
+5. **Construct the Volume (Step 5):**
+   - Build the voxel grid and accumulate intensities.
+   - Validate by extracting slices and comparing them to original frames.
+
+6. **Apply Post-Processing and Visualize (Step 6):**
+   - Smooth the volume using a 3D Gaussian filter.
+   - Generate visualizations using slicing or volume rendering.
+
+### **Potential Challenges**
+
+- **Computational Load:**
+  - Processing large volumes of data may be slow.
+  - Optimize code and consider using GPU acceleration if necessary.
+
+- **Data Quality:**
+  - Ultrasound images are inherently noisy.
+  - Preprocessing and careful parameter tuning are crucial.
+
+- **Algorithm Parameters:**
+  - Many algorithms require parameter tuning (e.g., filter sizes, thresholds).
+  - Conduct experiments to find optimal values.
+
+### **Additional Resources**
+
+- **Libraries:**
+  - **OpenCV:** For image processing and optical flow.
+  - **ITK:** For advanced image processing and filtering.
+  - **VTK:** For 3D visualization.
+- **Tutorials and Documentation:**
+  - OpenCV's tutorials on optical flow and feature tracking.
+  - ITK and VTK documentation for medical image processing and visualization.
+
+### **Project Timeline Suggestions**
+
+- **Days 1-2:** Implement image preprocessing and validate results.
+- **Days 3-4:** Implement motion estimation and global pose estimation.
+- **Days 5-6:** Map pixels to 3D space and reconstruct the volume.
+- **Days 7-8:** Apply post-processing, generate visualizations, and conduct validation.
+- **Day 9:** Prepare documentation, reports, and presentations.
+
+---
+
+
+
+
+
+
+
+

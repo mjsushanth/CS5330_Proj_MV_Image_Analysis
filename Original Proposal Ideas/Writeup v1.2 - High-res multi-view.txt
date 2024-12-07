@@ -1,0 +1,140 @@
+Quick Dataset Summary:
+
+-  Datasets: 
+   ETH3D High-Resolution Multi-View Dataset. Provides high-quality images, camera calibration, and ground truth data.
+
+Undistorted JPGs: Images have undergone a preprocessing step to remove the effects of lens distortion. Lens distortion can cause the images to bend at the edges, so undistorted images are "corrected" to show a more accurate representation. Use for accurate 3D recon.
+
+Distorted JPGs and RAW Images: Distorted are the raw, uncorrected images directly from the camera without any distortion correction. RAW images contain unprocessed, uncompressed sensor data from the camera, unlike JPGs which are compressed and often lose some detail. ( these are for photogrammetry and high-quality reconstructions. )
+
+Ground Truth: 3D ground truth for the scenes, likely including 3D point clouds, depth maps, mesh models.
+
+Occlusion Files: mark areas in the images where occlusion occurs. ( parts of the scene are hidden behind objects or are blocked from view. )
+
+
+Intrinsic Parameters - Focal length, Principal point, Distortion coefficients.
+Extrinsic Parameters - Camera's position and orientation in 3D space. Rotation matrix, Translation Vector.
+
+
+calibration details folder is present for each specific area - points3D, image, and camera text files.
+
+points3D - file provides the 3D coordinates of key features in your scene and how they correspond to the 2D image projections.
+images - provides the camera poses (orientation and position) for each image, which is crucial for Structure from Motion (SfM).
+cameras - intrinsic parameters, how the camera projects 3D points onto the 2D image plane.
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+Key Methodologies
+
+-  Feature Detection and Matching 
+-  Structure from Motion (SfM) 
+-  Multi-View Stereo (MVS) 
+-  Point Cloud Processing 
+-  Surface Reconstruction 
+-  Texture Mapping 
+-  Post-Processing and Visualization 
+-  Evaluation and Validation 
+
+
+1. Data Prep, Preprocess :: Prepare ETH3D dataset; organize images, enhance quality.
+- Actions: Choose scene, gather undistorted images, apply noise reduction or contrast. Gaussian Blur, Histogram Equalization.
+- Output: High-quality images for feature detection.
+
+
+2. Feature Detection & Matching :: Detect features, establish correspondences.
+- Actions: Use SIFT (robust) or ORB (fast), match with FLANN or Brute-Force. Handle/reject outliers with RANSAC.
+           Can also apply  Lowe's Ratio Test  to filter out false matches.
+- Output: Matched features ready for camera pose estimation.
+
+
+3. Structure from Motion (SfM) :: Estimate camera poses, create sparse 3D point cloud.
+- Actions: Estimate camera parameters with Essential Matrix (calibrated) or Fundamental Matrix (uncalibrated). Optimize with Bundle Adjustment (Levenberg-Marquardt).
+- Output: Sparse 3D point cloud with camera poses.
+
+
+4. Multi-View Stereo (MVS) :: Generate dense 3D point cloud.
+- Actions: Compute depth maps using PatchMatch Stereo or Semi-Global Matching. Fuse depth maps with COLMAP or OpenMVS for occlusion handling.
+- Output: Dense 3D point cloud.
+
+
+5. Point Cloud Processing :: Clean and optimize point cloud for reconstruction.
+- Actions: Remove noise with Statistical Outlier Removal (SOR) and Radius Outlier Removal (ROR). Downsample with Voxel Grid Downsampling for computational efficiency.
+- Output: Cleaned, optimized dense point cloud.
+
+
+6. Surface Reconstruction :: Create 3D mesh from point cloud.
+- Actions: Estimate normals with k-nearest neighbors. Generate mesh using Poisson Surface Reconstruction (high quality, smooth) or Delaunay Triangulation (faster but may have holes).
+- Output: High-quality 3D mesh.
+
+
+7. Texture Mapping :: Apply textures to the 3D mesh for realism.
+- Actions: UV unwrap with Blender or COLMAP, extract textures using camera poses. Blend textures using graph-cut optimization or weighted averaging.
+- Output: Textured 3D mesh.
+
+
+8. Post-Processing & Visualization :: Refine mesh and visualize the model.
+- Actions: Smooth with Laplacian Smoothing, simplify mesh with Quadric Edge Collapse Decimation. Visualize in Open3D.
+- Output: Refined, visualization-ready 3D model.
+
+
+9. Evaluation & Validation :: Assess model accuracy and quality.
+- Actions: Quantitative evaluation using Chamfer Distance and Hausdorff Distance. Perform visual inspection for qualitative assessment.
+
+
+
+
+
+------------------------------------------------------------------------------------------------------------------------------------------------------
+Some reasonings.
+
+SIFT  is chosen over faster methods like ORB when accuracy is need.
+Poisson Surface Reconstruction  - to produce high-quality meshes.
+COLMAP  - can be used for both SfM and MVS.
+
+
+
+------------------------------------------------------------------------------------------------------------------------------------------------------
+Some useful resource links. 
+
+  -  COLMAP: 
+    - For Structure from Motion and Multi-View Stereo.
+    -  Link:  [COLMAP GitHub Repository](https://github.com/colmap/colmap)
+  -  OpenMVS: 
+    - For dense reconstruction and mesh generation.
+    -  Link:  [OpenMVS GitHub Repository](https://github.com/cdcseacave/openMVS)
+  -  Meshlab: 
+    - For mesh processing and visualization.
+    -  Link:  [Meshlab](https://www.meshlab.net/)
+  -  Blender: 
+    - For UV mapping, texture baking, and advanced visualization.
+    -  Link:  [Blender](https://www.blender.org/)
+  -  Open3D: 
+    - For point cloud and mesh processing.
+    -  Link:  [Open3D](http://www.open3d.org/)
+  -  OpenCV: 
+    - For image processing and feature detection if custom implementation is needed.
+    -  Link:  [OpenCV](https://opencv.org/)
+
+
+------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,50 @@
+@echo off
+echo Creating backup of current packages...
+pip freeze > pip_packages_backup_%date:~-4,4%%date:~-10,2%%date:~-7,2%.txt
+
+echo.
+echo Starting package removal...
+echo.
+
+REM Packages to keep
+set "KEEP_PACKAGES=pip setuptools wheel"
+
+REM Remove scientific/data packages
+pip uninstall -y numpy pandas scipy matplotlib seaborn plotly
+pip uninstall -y scikit-learn statsmodels patsy
+
+REM Remove Jupyter-related packages
+pip uninstall -y jupyter ipython ipykernel notebook jupyterlab
+pip uninstall -y nbconvert nbformat nbclient notebook_shim
+pip uninstall -y jupyter_client jupyter_core jupyter-events jupyter-lsp
+pip uninstall -y jupyter_server jupyter_server_terminals
+
+REM Remove deep learning packages
+pip uninstall -y torch torchvision torchaudio
+
+REM Remove visualization and image processing
+pip uninstall -y pillow
+
+REM Remove development tools
+pip uninstall -y debugpy jedi parso
+
+REM Remove web-related packages
+pip uninstall -y requests urllib3 websocket-client websockets
+pip uninstall -y httpcore httpx
+
+REM Remove utility packages
+pip uninstall -y tqdm cloudpickle filelock psutil
+pip uninstall -y PyYAML tabulate
+
+echo.
+echo Upgrading essential packages...
+pip install --upgrade pip setuptools wheel
+
+echo.
+echo Cleanup complete. A backup of your packages was saved.
+echo You can find it in the current directory named: pip_packages_backup_[date].txt
+echo.
+echo Remaining packages:
+pip list
+
+pause

@@ -1,0 +1,103 @@
+Yes, there are several commands to manage and monitor your conda environments. Here are the key commands:
+
+1. **List all environments**:
+```bash
+conda env list
+# or
+conda info --envs
+```
+
+2. **Show size of environments** (Windows PowerShell):
+```powershell
+# Navigate to your conda directory (usually in your user folder)
+cd C:\Users\YourUsername\miniconda3\envs
+# List directory sizes
+Get-ChildItem | ForEach-Object {
+    $size = (Get-ChildItem $_.FullName -Recurse | Measure-Object -Property Length -Sum).Sum / 1GB
+    [PSCustomObject]@{
+        Name = $_.Name
+        "Size(GB)" = [math]::Round($size, 2)
+    }
+}
+```
+
+3. **List packages in current environment**:
+```bash
+conda list
+```
+
+4. **List packages in specific environment**:
+```bash
+conda list -n environment_name
+```
+
+5. **Remove an environment**:
+```bash
+conda env remove -n environment_name
+```
+
+6. **Clean up unused packages and caches** (frees up disk space):
+```bash
+conda clean --all
+```
+
+7. **View details about current environment**:
+```bash
+conda info
+```
+
+You can also use the Anaconda Navigator if you prefer a GUI:
+```bash
+# Install Anaconda Navigator
+conda install anaconda-navigator
+
+# Launch it
+anaconda-navigator
+```
+
+To monitor disk space used by conda:
+
+1. **Check package cache size**:
+```bash
+conda clean -p --dry-run
+```
+
+2. **Check downloaded tarballs**:
+```bash
+conda clean -t --dry-run
+```
+
+3. **Check index cache**:
+```bash
+conda clean -i --dry-run
+```
+
+Quick cleanup workflow:
+```bash
+# List environments
+conda env list
+
+# Remove unused environment
+conda env remove -n unused_environment
+
+# Clean everything
+conda clean --all -y
+
+# Verify disk space recovered (PowerShell)
+cd C:\Users\YourUsername\miniconda3
+Get-ChildItem | ForEach-Object {
+    $size = (Get-ChildItem $_.FullName -Recurse | Measure-Object -Property Length -Sum).Sum / 1GB
+    [PSCustomObject]@{
+        Name = $_.Name
+        "Size(GB)" = [math]::Round($size, 2)
+    }
+}
+```
+
+Remember:
+- `base` is your default environment and shouldn't be removed
+- Clean the conda cache periodically using `conda clean --all`
+- Keep track of which environments you actually need
+- Document the purpose of each environment
+
+Would you like me to explain any of these commands in more detail or provide additional management tips?

@@ -1,0 +1,1315 @@
+## Full Removal on Base WINDOWS; not on conda base:
+
+pip uninstall -y jupyterlab_server jupyterlab_pygments nbclient nbconvert nbformat notebook_shim pandocfilters pyzmq pywinpty Send2Trash terminado tornado traitlets voila nest-asyncio prometheus_client matplotlib-inline mistune contourpy cycler fonttools kiwisolver pyparsing webcolors numba llvmlite sympy networkx pynndescent umap-learn gymnasium Farama-Notifications joypy jsonschema jsonschema-specifications jsonpointer referencing rfc3339-validator rfc3986-validator isoduration uri-template mysql-connector-python h11 idna urllib3 sniffio beautifulsoup4 soupsieve defusedxml bleach loguru python-json-logger tenacity arrow asttokens executing stack-data pure-eval
+
+
+# If removed critical packages on CONDA BASE, verify.
+# IF missing, Reinstall urllib3, its important on conda base. dont remove on conda base.
+
+## -------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+## -------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+# PowerShell command to check ENV sizes:
+
+Get-ChildItem C:\Users\joems\miniconda3\envs -Directory | ForEach-Object {
+    $size = (Get-ChildItem $_.FullName -Recurse | Measure-Object -Property Length -Sum).Sum / 1GB
+    [PSCustomObject]@{
+        Environment = $_.Name
+        "Size(GB)" = [math]::Round($size, 2)
+    }
+}
+
+## -------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+# minconda package wise size:
+
+conda list -n eth3d_reconstruction --explicit > eth3d_packages.txt
+
+## -------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+## REMOVAL, CLEANING on CONDA BASE:
+conda env remove -n eth3d_reconstruction
+
+# CACHE REMOVAL ON CONDA BASE:
+conda clean --packages --index-cache --tarballs
+
+## -------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+# SET PRIORITY to strict and ensure it, check the print.
+conda config --set channel_priority strict
+conda config --show | findstr "channel_priority"
+
+By setting the channel priority to strict, we ensure that Conda prioritizes packages from the top-listed channels (e.g., pytorch, nvidia) before falling back to other sources like conda-forge. This approach minimizes the risk of incompatibilities between critical packages like PyTorch and CUDA, which are often more thoroughly tested within their own ecosystems.
+
+
+# NOW, if repeated failures are happening with the YML file, then swtich to flexible. (i used flexible.)
+
+conda config --set channel_priority flexible
+conda config --show | findstr "channel_priority"
+
+## -------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+## Variables that you could benefit with.
+
+C:\Program Files\NVIDIA\CUDNN\v9.1\
+├── bin/
+│   ├── 11.8/    # cuDNN binaries for CUDA 11.8
+│   └── 12.4/    # cuDNN binaries for CUDA 12.4
+└── lib/
+    ├── 11.8/x64/    # Libraries for CUDA 11.8
+    └── 12.4/x64/    # Libraries for CUDA 12.4
+
+
+
+set CUDA_HOME="C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.6"
+set TORCH_CUDA_ARCH_LIST=8.6
+set CONDA_ALWAYS_YES=true
+
+
+set CUDA_HOME=C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v12.1
+
+set CUDA_HOME=C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.1
+
+set PATH=C:\Program Files\NVIDIA\CUDNN\v9.1\bin\12.4;%PATH%
+set PATH=C:\Program Files\NVIDIA\CUDNN\v9.1\lib\12.4\x64;%PATH%
+
+set TORCH_CUDA_ARCH_LIST=8.6
+set CONDA_ALWAYS_YES=true
+
+# Run this to verify cuDNN DLLs are accessible
+python -c "import ctypes; ctypes.CDLL('C:/Program Files/NVIDIA/CUDNN/v9.1/bin/12.4/cudnn64_9.dll'); print('cuDNN library loaded successfully')"
+
+
+mamba install -c conda-forge eigen=3.4.0 glog gflags ceres-solver vtk=9.2 hdf5=1.10.6 libffi pybind11 -y
+
+
+
+## -------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+# REINSTALLING WITH MAMBA ! ! ! 
+
+cd "C:\Users\joems\OneDrive\Desktop\MLCV Project Items\Comp Vision CS 5330"
+
+conda env remove -n eth3d_reconstruction
+
+mamba env create -f eth3d_reconstruction.yml
+
+conda activate eth3d_reconstruction
+
+## -------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+## MOVING onto pytorch3d install.
+
+conda activate eth3d_reconstruction
+
+
+
+## CHECKS; ----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+mamba list
+
+python -c "import cv2; print('OpenCV Version:', cv2.__version__); print('CUDA enabled:', cv2.cuda.getCudaEnabledDeviceCount() > 0); print('Build info CUDA:', 'cuda' in cv2.getBuildInformation().lower())"
+
+python -c "import ctypes; print('ctypes loaded successfully')"
+
+python -c "import torch; print(f'PyTorch Version: {torch.__version__}\nCUDA Available: {torch.cuda.is_available()}\nCUDA Version: {torch.version.cuda}\nGPU Device: {torch.cuda.get_device_name(0) if torch.cuda.is_available() else \"No GPU available\"}\nNumber of GPUs: {torch.cuda.device_count()}')"
+
+
+
+## IF CUDA tools expect traditional layout:
+
+# If you want files in traditional location:
+xcopy "C:\Program Files\NVIDIA\CUDNN\v9.1\bin\*" "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.1\bin" /Y
+xcopy "C:\Program Files\NVIDIA\CUDNN\v9.1\include\*" "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.1\include" /Y
+xcopy "C:\Program Files\NVIDIA\CUDNN\v9.1\lib\*" "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.1\lib\x64" /Y
+
+
+
+## -------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+## -------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+## Step-by-step outline to install PyTorch3D on your setup, incorporating analysis and ensuring we’re in the correct environment for each phase. 
+
+---
+
+### 1. Initial Setup and Repository Cloning (Miniconda Prompt)
+
+1. **Open Miniconda Prompt** and initialize Conda:
+   ```
+   conda init
+   ```
+   - **Close** and **reopen** the Miniconda Prompt after running `conda init`.
+
+2. **Activate your Conda environment**:
+   ```
+   conda activate eth3d_reconstruction
+   ```
+
+3. **Set Miniconda Scripts in the PATH temporarily**:
+   ```
+   set PATH=C:\Users\joems\miniconda3\Scripts;%PATH%
+   ```
+
+4. **Clone the PyTorch3D repository**:
+   ```
+   cd C:\Users\joems\Projects
+   git clone https://github.com/facebookresearch/pytorch3d.git
+   ```
+
+5. **Navigate to the PyTorch3D directory**:
+   ```
+   cd pytorch3d
+   ```
+
+6. **Pull the latest changes** (optional but recommended):
+   ```
+   git pull origin main
+   ```
+
+### 2. Set Environment Variables (VS Code Developer Command Prompt)
+
+1. **Open the VS Code Developer Command Prompt for VS 2019**.
+
+2. **Navigate to the PyTorch3D directory**:
+   ```
+   cd C:\Users\joems\Projects\pytorch3d
+   ```
+
+3. **Activate your Conda environment in the same prompt**:
+   ```
+   conda activate eth3d_reconstruction
+   ```
+
+4. **Set CUDA Architecture and CUDA Path**:
+   - Since your GPU (RTX 3080) has a compute capability of 8.6:
+   ```
+   set TORCH_CUDA_ARCH_LIST=8.6
+   set CUDA_HOME=C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.6
+   ```
+
+5. **Add Conda Library bin to PATH temporarily**:
+   ```
+   set PATH=C:\Users\joems\miniconda3\Library\bin;%PATH%
+   ```
+
+6. **Check `ctypes` compatibility**:
+   ```
+   python -c "import ctypes; print('ctypes loaded successfully')"
+   ```
+
+### 3. Prepare the Environment for Building PyTorch3D (VS Code Developer Command Prompt)
+
+1. **Ensure required packages are installed or updated**:
+   ```
+   pip install fvcore iopath
+   ```
+
+2. **Set additional environment variables for building**:
+   ```
+   set DISTUTILS_USE_SDK=1
+   set PYTORCH3D_NO_NINJA=1
+   set MAX_JOBS=4
+   ```
+
+3. **Clean Previous Build Files**:
+   - If you have previously built PyTorch3D, clean up old build files to avoid conflicts:
+   ```
+   python setup.py clean
+   rmdir /S /Q build
+   rmdir /S /Q dist
+   rmdir /S /Q pytorch3d.egg-info
+   ```
+
+4. **Verify `link.exe` from VS Build Tools**:
+   - In the Miniconda environment, Conda’s `link.exe` can conflict with the MSVC linker. We’ll temporarily rename it to ensure only the MSVC linker is used:
+   ```
+   cd C:\Users\joems\miniconda3\envs\eth3d_reconstruction\Library\usr\bin
+   rename link.exe link_bak.exe
+   ```
+
+### 4. Compile and Install PyTorch3D (VS Code Developer Command Prompt)
+
+1. **Return to the PyTorch3D directory**:
+   ```
+   cd C:\Users\joems\Projects\pytorch3d
+   ```
+
+2. **Set Visual Studio Paths and Configure**:
+   - Ensure Visual Studio 2019 paths are included for compatibility:
+   ```
+   set VS2019_PATH="C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools"
+   set PATH=%VS2019_PATH%\VC\Tools\MSVC\14.29.30133\bin\Hostx64\x64;%PATH%
+   ```
+
+3. **Verify the correct linker is in use**:
+   ```
+   where link.exe
+   ```
+   - This should point to the MSVC linker within Visual Studio 2019’s toolchain.
+
+4. **Install PyTorch3D**:
+   ```
+   python setup.py install
+   ```
+
+### 5. Verify Installation and Restore Environment
+
+1. **Restore the original `link.exe`** (in case Conda tools need it):
+   ```
+   cd C:\Users\joems\miniconda3\envs\eth3d_reconstruction\Library\usr\bin
+   rename link_bak.exe link.exe
+   ```
+
+2. **Run verification commands**:
+   - Basic check for PyTorch3D version:
+     ```
+     python -c "import pytorch3d; print(f'PyTorch3D version: {pytorch3d.__version__}')"
+     ```
+
+   - Full verification, checking PyTorch, CUDA, and GPU availability:
+     ```
+     python -c "import torch; import pytorch3d; print(f'PyTorch version: {torch.__version__}\nPyTorch3D version: {pytorch3d.__version__}\nCUDA Available: {torch.cuda.is_available()}\nCUDA Version: {torch.version.cuda}\nGPU Device: {torch.cuda.get_device_name(0) if torch.cuda.is_available() else \"No GPU\"}')"
+     ```
+
+### 6. Create and Configure Jupyter Kernel for the Environment
+
+1. **Install Jupyter kernel and notebook requirements**: OPTIONAL: notice your yml, it already includes this stuff.
+   ```
+   conda install -y ipykernel jupyter jupyterlab notebook
+   ```
+
+2. **Create a kernel for the `eth3d_reconstruction` environment**:
+   ```
+   python -m ipykernel install --user --name eth3d_reconstruction --display-name "Python (eth3d_reconstruction)"
+   ```
+
+---
+
+By creating a kernel specific to eth3d_reconstruction, you ensure that all code in a Jupyter notebook session uses the packages, versions, and configurations defined in that environment. This eliminates potential conflicts with other environments or the base installation.
+
+PyTorch3D Version: Correctly installed as version 0.7.4.
+PyTorch Version: Matches your specified version, 1.13.1.
+CUDA Availability: Recognized and available with version 11.6, fully compatible with your environment.
+GPU Detection: Successfully detects your NVIDIA GeForce RTX 3080 Ti.
+
+## -------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+## -------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+# -> PyVista, upgrade command.
+
+pip install --upgrade pyvista
+conda install -c conda-forge pyvista
+
+
+
+
+
+
+
+## -------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+# -> Removing Both Open3D and OpenCV.
+
+For CUDA accelerated training and building, we need to build from source. Its important.
+
+conda deactivate
+conda activate eth3d_reconstruction
+
+Command 1, 2:
+    pip uninstall -y opencv-python opencv-contrib-python opencv-python-headless opencv-contrib-python-headless
+    conda uninstall -y opencv-python opencv-contrib-python opencv-python-headless opencv-contrib-python-headless
+
+Both command 1, 2 didnt work. 
+
+conda remove -y opencv libopencv py-opencv
+
+-> this is not maintained with CUDA SUPPORT as well: conda install -c conda-forge opencv=4.5.5 cudatoolkit=11.6
+
+pip uninstall -y open3d
+conda remove -y open3d
+
+## -------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+## -> Building OpenCV with CUDA Support
+## -> If have built already, cleanup commands. If not, ignore.
+
+
+cd C:\Users\joems\Projects\opencv\build
+cmake --build . --target clean
+rmdir /S /Q C:\Users\joems\Projects\opencv\build
+
+
+
+
+
+
+
+We will install missing dependencies in the VS Code Developer Command Prompt with the eth3d_reconstruction environment active. This ensures all packages are available specifically within this environment.
+
+The CMake configuration should also be run while the eth3d_reconstruction environment is active. This guarantees that OpenCV will recognize and link to the libraries in your virtual environment rather than system-wide installations, preventing conflicts and ensuring consistency.
+
+
+
+
+# Open the VS Code Developer Command Prompt (since it's configured for building with Visual Studio)
+
+# This is important for setting the correct build paths. Ensure you have CMake and Git installed:
+# In the VS Code Developer Command Prompt, verify these installations:
+
+cmake --version
+git --version
+
+# Install Ninja (for faster builds) in the eth3d_reconstruction environment:
+
+conda activate eth3d_reconstruction
+conda install -c conda-forge ninja
+
+
+## -------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+    Verify CUDA and cuDNN Paths:
+
+    Ensure CUDA is installed at C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.6.
+    Locate cuDNN files in the CUDA directory:
+    Headers: C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.6\include\cudnn.h
+    Library: C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.6\lib\x64\cudnn.lib
+## -------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+## CLONING Repositories
+
+Navigate to your project directory in the VS Code Developer Command Prompt:
+
+cd C:\Users\joems\Projects
+
+
+Clone the OpenCV and OpenCV Contrib Repositories:
+
+git clone https://github.com/opencv/opencv.git
+git clone https://github.com/opencv/opencv_contrib.git
+
+
+# Clone OpenCV 4.8.1
+git clone https://github.com/opencv/opencv.git
+cd opencv
+git checkout 4.8.1
+cd ..
+
+# Clone OpenCV contrib 4.8.1
+git clone https://github.com/opencv/opencv_contrib.git
+cd opencv_contrib
+git checkout 4.8.1
+cd ..
+
+
+
+## -> Next Steps: Building with CMAKE command.
+
+
+Let’s go through the steps carefully, setting up everything for a clean and successful OpenCV build with CUDA and all dependencies. Here’s the sequence:
+
+### Step 1: Open VS Code Developer Command Prompt
+
+- Open the **VS Code Developer Command Prompt** (this is important as it has the required build tools in its path).
+
+### Step 2: Activate the Virtual Environment
+
+1. **Activate** the `eth3d_reconstruction` environment by running:
+   ```
+   conda activate eth3d_reconstruction
+   ```
+
+### Step 3: Install Missing Dependencies via Conda
+
+In the **VS Code Developer Command Prompt with `eth3d_reconstruction` activated**, install the required dependencies for a complete OpenCV build.
+
+# Install VTK, BLAS, LAPACK, and Eigen
+conda install -c conda-forge vtk openblas blas lapack eigen
+
+conda install -c conda-forge glog gflags
+
+conda install -c conda-forge tesseract
+
+
+Step 2: Install OGRE3D
+Activate your environment in the Miniconda Prompt:
+
+
+conda activate eth3d_reconstruction
+
+
+Install OGRE3D from conda-forge:
+
+conda install -c conda-forge ogre
+Step 3: Ensure Python Bindings
+Still in the same Miniconda Prompt with your environment activated, install pybind11 and other potential Python dependencies to ensure compatibility:
+
+
+conda install -c conda-forge pybind11 numpy
+
+
+## understanding dependencies..
+
+Eigen: Linear algebra library required by sfm.
+Glog and Gflags: Google's logging and command-line flags libraries.
+SuiteSparse: Required by Ceres Solver.
+Ceres Solver: Non-linear optimization library required by sfm.
+HDF5: Required for the opencv_hdf module.
+VTK: Visualization Toolkit required for certain GUI features.
+
+
+
+## -> CERES SOLVER FOR WINDOWS IMPORTANT FOR SFM: Structure From Motion.
+ 
+Adjusted Ceres Solver Installation with vcpkg in C:\Users\joems\Projects\
+Step 1: Install vcpkg in C:\Users\joems\Projects\
+Open a Windows Command Prompt (not inside the virtual environment) and clone the vcpkg repository to your preferred location:
+
+git clone https://github.com/microsoft/vcpkg.git C:\Users\joems\Projects\vcpkg
+Navigate into the vcpkg directory:
+
+cd C:\Users\joems\Projects\vcpkg
+Bootstrap vcpkg:
+
+
+.\bootstrap-vcpkg.bat
+Step 2: Install Ceres Solver with vcpkg
+Install Ceres Solver and its dependencies using vcpkg:
+For full-featured installation (recommended for structure-from-motion and related tasks):
+
+.\vcpkg install ceres[suitesparse,cxsparse]:x64-windows
+Or, if you want a simpler installation without optional dependencies:
+
+.\vcpkg install ceres:x64-windows
+
+
+
+
+
+## ZLIB VIA VCPKG.
+
+1. Install Zlib via vcpkg
+Ensure that Zlib is installed in vcpkg:
+
+cmd
+Copy code
+cd C:\Users\joems\Projects\vcpkg
+.\vcpkg install zlib:x64-windows
+
+
+## you will activate your virtual environment and run CMake with the vcpkg toolchain, as CMake will now have access to the Ceres library paths through vcpkg.
+
+
+
+
+## Change of plans .... DEPEND on ZLIB, etc everything from CONDA. dont do outside conda.
+
+
+## workaround for tesseract: https://github.com/opencv/opencv_contrib/pull/2220
+
+
+## install NASM.
+https://www.nasm.us/pub/nasm/releasebuilds/2.16.03/win64/
+
+
+Updated CMake Command
+Update the paths by replacing single backslashes with double backslashes for the Python library path. Run this command in the VS Code Developer Command Prompt with the eth3d_reconstruction environment active:
+
+
+
+## removing existing..
+conda remove opencv opencv-python opencv-contrib-python opencv-python-headless --force
+pip uninstall opencv-python opencv-contrib-python opencv-python-headless --yes
+
+
+
+## -> Sometimes, you may have to pause, open miniconda, check for prompts for zlib or such errors when NINJA / CMAKE give errors.. then. do this.
+
+
+cd "C:\Users\joems\OneDrive\Desktop\MLCV Project Items\Comp Vision CS 5330"
+conda activate eth3d_reconstruction
+
+
+conda remove libavif --force
+conda install -c conda-forge libavif
+
+conda install -c conda-forge zlib
+conda install -c conda-forge libavif
+
+
+conda install -c conda-forge ceres-solver eigen glog gflags suitesparse hdf5 zlib
+conda install -c conda-forge vtk ogre pybind11 numpy
+
+conda install -c anaconda libffi
+
+
+## dont remove. too much stuff depend on it. 
+conda install -c conda-forge libtiff libjpeg-turbo libpng openexr
+
+
+
+## Removal and Rebuild of folder before we RUN CMAKE.
+
+conda deactivate
+
+cd C:\Users\joems\Projects\opencv\
+
+conda activate eth3d_reconstruction
+
+
+rm -rf C:\Users\joems\Projects\opencv\build
+mkdir C:\Users\joems\Projects\opencv\build
+cd C:\Users\joems\Projects\opencv\build
+
+conda activate eth3d_reconstruction
+
+## Same commands for removal;
+
+
+
+## CHECKS; ## CMAKE LARGE COMMAND. // ## UPDATED large comlmand..
+# setting PATH for this session; for hdf5 1.10.5:
+
+## updated command after installing hdf5 manually on windows outside the virtual env.
+
+
+python -c "import cv2; print('OpenCV version:', cv2.__version__); print('CUDA support:', cv2.cuda.getCudaEnabledDeviceCount() > 0); print('AVIF support:', 'avif' in 
+
+
+
+cd C:\Users\joems\Projects\HDF5-workspace\install\cmake\hdf5
+copy hdf5-config.cmake HDF5Config.cmake
+copy hdf5-config-version.cmake HDF5ConfigVersion.cmake
+
+
+
+## Modify OpenCV's CMakeLists.txt Temporarily:
+
+Locate the section where HDF5 is found, likely in opencv/3rdparty/hdf5/CMakeLists.txt or similar.
+
+
+Replace:
+
+find_package(HDF5)
+with:
+
+find_package(HDF5 REQUIRED CONFIG NO_MODULE)
+This forces CMake to use the HDF5Config.cmake file and not the built-in FindHDF5.cmake module.
+
+Alternatively, Add -DHDF5_USE_STATIC_LIBRARIES=OFF to the CMake Command.
+
+# Enable CMake's Find Debug Mode:
+set CMAKE_FIND_DEBUG_MODE=ON
+
+
+
+
+set PATH=C:\Users\joems\miniconda3\envs\eth3d_reconstruction\Library\bin;%PATH%
+set PATH=C:\Users\joems\Projects\HDF5-workspace\install\bin;%PATH%
+
+python -c "import ctypes; ctypes.CDLL('C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/bin/avif.dll'); print('AVIF library loaded successfully')"
+python -c "import ctypes; ctypes.CDLL('C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v11.6/bin/cudnn64_8.dll'); print('cuDNN library loaded successfully')"
+python -c "import ctypes; ctypes.CDLL('C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v11.6/bin/cudart64_110.dll'); print('CUDA runtime loaded successfully')"
+python -c "import ctypes; ctypes.CDLL('C:/Windows/System32/OpenCL.dll'); print('OpenCL library loaded successfully')"
+python -c "import ctypes; ctypes.CDLL('C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/bin/hdf5.dll'); print('HDF5 library loaded successfully')"
+python -c "import h5py; print(h5py.get_config())"
+
+
+
+conda activate eth3d_reconstruction
+
+cd C:\Users\joems\Projects\opencv
+rmdir /S /Q build
+mkdir build
+cd build
+
+set CMAKE_VERBOSE_MAKEFILE=OFF
+
+rmdir /S /Q CMakeFiles
+del CMakeCache.txt
+
+set HDF5_ROOT=C:/Users/joems/Projects/HDF5-workspace/install
+set HDF5_DIR=C:/Users/joems/Projects/HDF5-workspace/install/cmake/hdf5
+set CMAKE_PREFIX_PATH=C:/Users/joems/Projects/HDF5-workspace/install;%CMAKE_PREFIX_PATH%
+
+
+## Temporarily Rename Conda's HDF5 Libraries and Includes: This ensures that CMake cannot find HDF5 in the Conda environment.
+
+ren "C:\Users\joems\miniconda3\envs\eth3d_reconstruction\Library\lib\hdf5.lib" hdf5.lib.bak
+ren "C:\Users\joems\miniconda3\envs\eth3d_reconstruction\Library\include\hdf5.h" hdf5.h.bak
+
+set HDF5_ROOT=C:/Users/joems/Projects/HDF5-workspace/install
+set HDF5_DIR=C:/Users/joems/Projects/HDF5-workspace/install/cmake/hdf5
+set CMAKE_PREFIX_PATH=C:/Users/joems/Projects/HDF5-workspace/install;%CMAKE_PREFIX_PATH%
+
+
+set HDF5_DIR=C:/Users/joems/Projects/HDF5-workspace/install/cmake/hdf5
+set CMAKE_PREFIX_PATH=C:/Users/joems/Projects/HDF5-workspace/install;C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library
+set CMAKE_LIBRARY_PATH=C:/Users/joems/Projects/HDF5-workspace/install/lib
+set CMAKE_INCLUDE_PATH=C:/Users/joems/Projects/HDF5-workspace/install/include
+
+
+
+
+cmake -G "Ninja" ^
+  -DCMAKE_BUILD_TYPE=Release ^
+  -DOPENCV_EXTRA_MODULES_PATH="C:/Users/joems/Projects/opencv_contrib/modules" ^
+  -DWITH_CUDA=ON ^
+  -DCUDA_ARCH_BIN=8.6 ^
+  -DWITH_CUDNN=ON ^
+  -DCUDNN_INCLUDE_DIR="C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v11.6/include" ^
+  -DCUDNN_LIBRARY="C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v11.6/lib/x64/cudnn.lib" ^
+  -DWITH_OPENGL=ON ^
+  -DWITH_TBB=ON ^
+  -DBUILD_opencv_python3=ON ^
+  -DPYTHON3_EXECUTABLE="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/python.exe" ^
+  -DPYTHON3_INCLUDE_DIR="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/include" ^
+  -DPYTHON3_LIBRARY="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/libs/python310.lib" ^
+  -DWITH_NASM=ON ^
+  -DWITH_VTK=ON ^
+  -DVTK_DIR="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/lib/cmake/vtk-9.2" ^
+  -DWITH_QT=ON ^
+  -DEIGEN_INCLUDE_PATH="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/include/eigen3" ^
+  -DGLOG_INCLUDE_DIR="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/include" ^
+  -DGLOG_LIBRARY="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/lib/glog.lib" ^
+  -DGFLAGS_INCLUDE_DIR="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/include" ^
+  -DGFLAGS_LIBRARY="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/lib/gflags_static.lib" ^
+  -DCeres_DIR="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/lib/cmake/Ceres" ^
+  -DOPENCV_ENABLE_NONFREE=ON ^
+  -DWITH_SFM=ON ^
+  -DWITH_AVIF=OFF ^
+  -DBUILD_ZLIB=OFF ^
+  -DCMAKE_USE_SYSTEM_ZLIB=ON ^
+  -DBUILD_TIFF=OFF ^
+  -DWITH_TIFF=ON ^
+  -DBUILD_JPEG=OFF ^
+  -DWITH_JPEG=ON ^
+  -DBUILD_PNG=OFF ^
+  -DWITH_PNG=ON ^
+  -DBUILD_OPENEXR=OFF ^
+  -DWITH_OPENEXR=ON ^
+  -DWITH_HDF5=ON ^
+  -DHDF5_ROOT="C:/Users/joems/Projects/HDF5-workspace/install" ^
+  -DHDF5_DIR="C:/Users/joems/Projects/HDF5-workspace/install/cmake/hdf5" ^
+  -DCMAKE_PREFIX_PATH="C:/Users/joems/Projects/HDF5-workspace/install;C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library" ^
+  -DCMAKE_LIBRARY_PATH="C:/Users/joems/Projects/HDF5-workspace/install/lib" ^
+  -DCMAKE_INCLUDE_PATH="C:/Users/joems/Projects/HDF5-workspace/install/include" ^
+  -DCMAKE_INSTALL_PREFIX="C:/Users/joems/Projects/opencv/install" ^
+  -DCMAKE_IGNORE_PATH="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/include/hdf5;C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/lib/hdf5.lib;C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/lib/hdf5_cpp.lib" ^
+  C:/Users/joems/Projects/opencv
+
+
+
+
+ren "C:\Users\joems\miniconda3\envs\eth3d_reconstruction\Library\lib\hdf5.lib.bak" hdf5.lib
+ren "C:\Users\joems\miniconda3\envs\eth3d_reconstruction\Library\include\hdf5.h.bak" hdf5.h
+
+
+
+cmake -LA | findstr -i "hdf5"
+
+
+
+
+
+
+## simplified// but.
+
+cmake -G "Ninja" ^
+  -DCMAKE_BUILD_TYPE=Release ^
+  -DOPENCV_EXTRA_MODULES_PATH="C:/Users/joems/Projects/opencv_contrib/modules" ^
+  -DWITH_HDF5=ON ^
+  -DHDF5_DIR="C:/HDF5/cmake/hdf5" ^
+  -DWITH_SFM=ON ^
+  -DCMAKE_INSTALL_PREFIX="C:/Users/joems/Projects/opencv/install" ^
+  -DPYTHON3_EXECUTABLE="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/python.exe" ^
+  -DPYTHON3_INCLUDE_DIR="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/include" ^
+  -DPYTHON3_LIBRARY="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/libs/python310.lib" ^
+  -DWITH_CUDA=ON ^
+  -DCUDA_ARCH_BIN=8.6 ^
+  -DWITH_CUDNN=ON ^
+  -DCUDNN_INCLUDE_DIR="C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v11.6/include" ^
+  -DCUDNN_LIBRARY="C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v11.6/lib/x64/cudnn.lib" ^
+  -DWITH_OPENGL=ON ^
+  -DWITH_TBB=ON ^
+  -DWITH_VTK=ON ^
+  -DVTK_DIR="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/lib/cmake/vtk-9.2" ^
+  -DCMAKE_PREFIX_PATH="C:/HDF5;C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library" ^
+  C:/Users/joems/Projects/opencv
+
+
+cmake -G "Ninja" ^
+  -DCMAKE_BUILD_TYPE=Release ^
+  -DOPENCV_EXTRA_MODULES_PATH=C:/Users/joems/Projects/opencv_contrib/modules ^
+  -DWITH_CUDA=ON ^
+  -DCUDA_ARCH_BIN=8.6 ^
+  -DWITH_CUDNN=ON ^
+  -DCUDNN_INCLUDE_DIR="C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v11.6/include" ^
+  -DCUDNN_LIBRARY="C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v11.6/lib/x64/cudnn.lib" ^
+  -DWITH_OPENGL=ON ^
+  -DWITH_TBB=ON ^
+  -DBUILD_opencv_python3=ON ^
+  -DPYTHON3_EXECUTABLE="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/python.exe" ^
+  -DPYTHON3_INCLUDE_DIR="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/include" ^
+  -DPYTHON3_LIBRARY="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/libs/python310.lib" ^
+  -DWITH_NASM=ON ^
+  -DWITH_VTK=ON ^
+  -DVTK_DIR="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/lib/cmake/vtk-9.2" ^
+  -DWITH_QT=ON ^
+  -DEIGEN_INCLUDE_PATH="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/include/eigen3" ^
+  -DGLOG_INCLUDE_DIR="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/include" ^
+  -DGLOG_LIBRARY="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/lib/glog.lib" ^
+  -DGFLAGS_INCLUDE_DIR="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/include" ^
+  -DGFLAGS_LIBRARY="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/lib/gflags_static.lib" ^
+  -DCeres_DIR="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/lib/cmake/Ceres" ^
+  -DOPENCV_ENABLE_NONFREE=ON ^
+  -DWITH_SFM=ON ^
+  -DWITH_AVIF=OFF ^
+  -DBUILD_ZLIB=OFF ^
+  -DCMAKE_USE_SYSTEM_ZLIB=ON ^
+  -DBUILD_TIFF=OFF ^
+  -DWITH_TIFF=ON ^
+  -DBUILD_JPEG=OFF ^
+  -DWITH_JPEG=ON ^
+  -DBUILD_PNG=OFF ^
+  -DWITH_PNG=ON ^
+  -DBUILD_OPENEXR=OFF ^
+  -DWITH_OPENEXR=ON ^
+  -DWITH_HDF5=ON ^
+  -DOPENCV_EXTRA_MODULES_PATH="C:/Users/joems/Projects/opencv_contrib/modules" ^
+  -DHDF5_ROOT="C:/Users/joems/Projects/HDF5-workspace/install" ^
+  -DHDF5_USE_STATIC_LIBRARIES=OFF ^
+  -DHDF5_DIR="C:/Users/joems/Projects/HDF5-workspace/install/cmake/hdf5" ^
+  -DCMAKE_PREFIX_PATH="C:/Users/joems/Projects/HDF5-workspace/install;C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library" ^
+  -DCMAKE_LIBRARY_PATH="C:/Users/joems/Projects/HDF5-workspace/install/lib" ^
+  -DCMAKE_INCLUDE_PATH="C:/Users/joems/Projects/HDF5-workspace/install/include" ^
+  -DCMAKE_INSTALL_PREFIX=C:/Users/joems/Projects/opencv/install ^
+  C:/Users/joems/Projects/opencv
+
+
+
+
+
+cmake -G "Ninja" ^
+  -DCMAKE_BUILD_TYPE=Release ^  # Sets the build type to Release for optimized performance
+  -DOPENCV_EXTRA_MODULES_PATH=C:/Users/joems/Projects/opencv_contrib/modules ^  # Path to opencv_contrib modules
+  -DWITH_CUDA=ON ^  # Enables CUDA support
+  -DCUDA_ARCH_BIN=8.6 ^  # Specifies your GPU’s architecture
+  -DWITH_CUDNN=ON ^  # Enables cuDNN for optimized neural network performance
+  -DCUDNN_INCLUDE_DIR="C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v11.6/include" ^
+  -DCUDNN_LIBRARY="C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v11.6/lib/x64/cudnn.lib" ^
+  -DWITH_OPENGL=ON ^  # Enables OpenGL support
+  -DWITH_TBB=ON ^  # Enables Intel Threading Building Blocks for parallel processing
+  -DBUILD_opencv_python3=ON ^  # Builds the Python 3 bindings
+  -DPYTHON3_EXECUTABLE="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/python.exe" ^
+  -DPYTHON3_INCLUDE_DIR="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/include" ^
+  -DPYTHON3_LIBRARY="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/libs/python310.lib" ^
+  -DWITH_NASM=ON ^  # Enables NASM (used for some optimizations in image processing)
+  -DWITH_VTK=ON ^  # Enables VTK for 3D visualization
+  -DVTK_DIR="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/lib/cmake/vtk-9.2" ^
+  -DWITH_QT=ON ^  # Enables the QT GUI support
+  -DCMAKE_PREFIX_PATH="C:/Users/joems/Projects/HDF5-workspace/install;C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library" ^
+  -DEIGEN_INCLUDE_PATH="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/include/eigen3" ^
+  -DGLOG_INCLUDE_DIR="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/include" ^
+  -DGLOG_LIBRARY="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/lib/glog.lib" ^
+  -DGFLAGS_INCLUDE_DIR="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/include" ^
+  -DGFLAGS_LIBRARY="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/lib/gflags_static.lib" ^
+  -DCeres_DIR="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/lib/cmake/Ceres" ^
+  -DOPENCV_ENABLE_NONFREE=ON ^  # Enables non-free algorithms
+  -DWITH_SFM=ON ^  # Enables the Structure from Motion module, which requires HDF5
+  -DWITH_AVIF=OFF ^  # Disables AVIF support if not needed
+  -DBUILD_ZLIB=OFF ^  # Avoids rebuilding Zlib if it’s already in the environment
+  -DCMAKE_USE_SYSTEM_ZLIB=ON ^
+  -DBUILD_TIFF=OFF ^
+  -DWITH_TIFF=ON ^  # Uses system TIFF support
+  -DBUILD_JPEG=OFF ^
+  -DWITH_JPEG=ON ^  # Uses system JPEG support
+  -DBUILD_PNG=OFF ^
+  -DWITH_PNG=ON ^  # Uses system PNG support
+  -DBUILD_OPENEXR=OFF ^
+  -DWITH_OPENEXR=ON ^  # Uses system OpenEXR support
+  -DWITH_HDF5=ON ^  # Enables HDF5 support
+  -DHDF5_ROOT="C:/Users/joems/Projects/HDF5-workspace/install" ^  # Ensures the HDF5 root directory is set
+  -DHDF5_USE_STATIC_LIBRARIES=OFF ^  # Explicitly tells CMake to use shared HDF5 libraries if available
+  -DHDF5_DIR="C:/Users/joems/Projects/HDF5-workspace/install/cmake/hdf5" ^  # Sets the HDF5 directory to find `HDF5Config.cmake`
+  -DCMAKE_PREFIX_PATH="C:/Users/joems/Projects/HDF5-workspace/install;C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library" ^
+  -DCMAKE_LIBRARY_PATH="C:/Users/joems/Projects/HDF5-workspace/install/lib" ^  # Sets the library path to custom HDF5 libraries
+  -DCMAKE_INCLUDE_PATH="C:/Users/joems/Projects/HDF5-workspace/install/include" ^  # Ensures headers are found correctly
+  -DCMAKE_INSTALL_PREFIX=C:/Users/joems/Projects/opencv/install ^  # Installation path for the compiled OpenCV
+  C:/Users/joems/Projects/opencv  # Path to the main OpenCV source directory
+
+
+
+
+
+
+## complex with claude; 1.
+
+cmake -G "Ninja" ^
+  -DCMAKE_BUILD_TYPE=Release ^
+  -DOPENCV_EXTRA_MODULES_PATH=C:/Users/joems/Projects/opencv_contrib/modules ^
+  -DWITH_CUDA=ON ^
+  -DCUDA_ARCH_BIN=8.6 ^
+  -DWITH_CUDNN=ON ^
+  -DCUDNN_INCLUDE_DIR="C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v11.6/include" ^
+  -DCUDNN_LIBRARY="C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v11.6/lib/x64/cudnn.lib" ^
+  -DWITH_OPENGL=ON ^
+  -DWITH_TBB=ON ^
+  -DBUILD_opencv_python3=ON ^
+  -DPYTHON3_EXECUTABLE="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/python.exe" ^
+  -DPYTHON3_INCLUDE_DIR="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/include" ^
+  -DPYTHON3_LIBRARY="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/libs/python310.lib" ^
+  -DWITH_NASM=ON ^
+  -DWITH_VTK=ON ^
+  -DVTK_DIR="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/lib/cmake/vtk-9.2" ^
+  -DWITH_QT=ON ^
+  -DCMAKE_PREFIX_PATH="C:/Users/joems/Projects/HDF5-workspace/install;C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library" ^
+  -DEIGEN_INCLUDE_PATH="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/include/eigen3" ^
+  -DGLOG_INCLUDE_DIR="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/include" ^
+  -DGLOG_LIBRARY="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/lib/glog.lib" ^
+  -DGFLAGS_INCLUDE_DIR="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/include" ^
+  -DGFLAGS_LIBRARY="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/lib/gflags_static.lib" ^
+  -DCeres_DIR="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/lib/cmake/Ceres" ^
+  -DOPENCV_ENABLE_NONFREE=ON ^
+  -DWITH_SFM=ON ^
+  -DWITH_AVIF=OFF ^
+  -DBUILD_ZLIB=OFF ^
+  -DCMAKE_USE_SYSTEM_ZLIB=ON ^
+  -DBUILD_TIFF=OFF ^
+  -DWITH_TIFF=ON ^
+  -DBUILD_JPEG=OFF ^
+  -DWITH_JPEG=ON ^
+  -DBUILD_PNG=OFF ^
+  -DWITH_PNG=ON ^
+  -DBUILD_OPENEXR=OFF ^
+  -DWITH_OPENEXR=ON ^
+  -DWITH_HDF5=ON ^
+  -DCMAKE_IGNORE_PATH="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/lib/hdf5.lib" ^
+  -DHDF5_BUILD_CPP_LIB=ON ^
+  -DHDF5_BUILD_FORTRAN=OFF ^
+  -DHDF5_ROOT="C:/Users/joems/Projects/HDF5-workspace/install" ^
+  -DHDF5_DIR="C:/Users/joems/Projects/HDF5-workspace/install/cmake/hdf5" ^
+  -DCMAKE_INSTALL_PREFIX=C:/Users/joems/Projects/opencv/install ^
+  -DHDF5_USE_STATIC_LIBRARIES=OFF ^
+  -DHDF5_PREFER_PARALLEL=OFF ^
+  -DHDF5_CXX_COMPILER_EXECUTABLE="C:/Program Files (x86)/Microsoft Visual Studio/2019/BuildTools/VC/Tools/MSVC/14.29.30133/bin/Hostx64/x64/cl.exe" ^
+  -DHDF5_INCLUDE_DIRS="C:/Users/joems/Projects/HDF5-workspace/install/include" ^
+  -DHDF5_LIBRARIES="C:/Users/joems/Projects/HDF5-workspace/install/lib/hdf5.lib;C:/Users/joems/Projects/HDF5-workspace/install/lib/hdf5_cpp.lib" ^
+  -DHDF5_FOUND=TRUE ^
+  -DHDF5_VERSION=1.10.6 ^
+  -DCMAKE_IGNORE_PATH="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/lib/hdf5.lib;C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/include/hdf5.h" ^
+  -DCMAKE_LIBRARY_PATH="C:/Users/joems/Projects/HDF5-workspace/install/lib" ^
+  -DCMAKE_INCLUDE_PATH="C:/Users/joems/Projects/HDF5-workspace/install/include" ^
+  C:/Users/joems/Projects/opencv
+
+
+
+
+
+
+## debug items flags;
+  -DCMAKE_FIND_DEBUG_MODE=ON ^
+  -DCMAKE_MESSAGE_LOG_LEVEL=DEBUG ^
+
+
+## ----------------------------------------------------------------------------------------------------------------------------------------------------------------
+## Most important paths to focus on:
+    /cmake/hdf5/hdf5-config.cmake
+    /cmake/hdf5/hdf5-config-version.cmake
+
+## didnt work, so trying root. still unavailable.
+
+-DWITH_HDF5=ON ^
+-DHDF5_DIR="C:/Users/joems/Projects/HDF5-workspace/install/cmake/hdf5" ^
+
+-DWITH_HDF5=ON ^
+-DHDF5_ROOT="C:/Users/joems/Projects/HDF5-workspace/install" ^
+
+
+# files are in.. 
+
+C:\Users\joems\Projects\HDF5-workspace\install\cmake\hdf5\hdf5-config.cmake
+C:\Users\joems\Projects\HDF5-workspace\install\cmake\hdf5\hdf5-config-version.cmake
+
+
+
+
+## changing;   -DHDF5_LIBRARIES="C:/Users/joems/Projects/HDF5-workspace/install/lib/libhdf5.lib;C:/Users/joems/Projects/HDF5-workspace/install/lib/libhdf5_cpp.lib" ^
+
+
+## For having it OFF:
+  -DWITH_HDF5=OFF ^
+  -DBUILD_opencv_hdf=OFF ^
+  -DHAVE_HDF5=OFF ^
+
+
+#Analysis for HDF5:
+(eth3d_reconstruction) C:\Users\joems\Projects\opencv\build>dir "C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/cmake/hdf5" Volume in drive C is OS Volume Serial Number is 80B5-C092 Directory of C:\Users\joems\miniconda3\envs\eth3d_reconstruction\Library\cmake File Not Found
+
+ The cmake/hdf5 directory doesn't exist, which explains why the minimal approach with just HDF5_DIR didn't work. Since HDF5 doesn't have its CMake config files in the expected location, we need to explicitly specify all the key paths.
+
+MAIN issue: Still no HDF5 listing under Media I/O or third-party libraries sections (unlike other libraries like OpenEXR, TIFF, etc.)
+This might indicate CMake is still not fully recognizing HDF5 configuration
+
+# just 2 minimal for HDF5 mentions doesnt work;
+  -DWITH_HDF5=ON ^
+  -DHDF5_DIR="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/cmake/hdf5" ^
+
+# Combined library lists in HDF5_LIBRARIES to include all components. Added runtime paths for DLLs. Explicitly marked HDF5 as found. Enabled C++ library building
+
+
+
+## try with minimal configuration:
+
+rmdir /S /Q CMakeFiles
+del CMakeCache.txt
+
+cmake -G "Ninja" ^
+  -DWITH_HDF5=ON ^
+  -DHDF5_DIR="C:/Users/joems/Projects/HDF5-workspace/install/cmake/hdf5" ^
+  -DCMAKE_FIND_DEBUG_MODE=ON ^
+  -DCMAKE_MESSAGE_LOG_LEVEL=DEBUG ^
+  -DCMAKE_INSTALL_PREFIX=C:/Users/joems/Projects/opencv/install ^
+  C:/Users/joems/Projects/opencv
+
+
+
+
+
+# Alternative for HDF5
+  -DHDF5_ROOT="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library" ^
+  -DHDF5_INCLUDE_DIR="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/include" ^
+  -DHDF5_C_INCLUDE_DIR="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/include" ^
+  -DHDF5_CXX_INCLUDE_DIR="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/include" ^
+  -DHDF5_LIBRARY="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/lib/hdf5.lib" ^
+  -DHDF5_C_LIBRARY="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/lib/hdf5.lib" ^
+  -DHDF5_CXX_LIBRARY="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/lib/hdf5_cpp.lib" ^
+  -DHDF5_C_LIBRARY_hdf5="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/lib/hdf5.lib" ^
+  -DHDF5_C_LIBRARY_z="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/lib/zlib.lib" ^
+  -DHDF5_LIBRARY_DIRS="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/lib" ^
+  -DWITH_HDF5=ON ^
+  -DBUILD_opencv_hdf=ON ^
+
+
+
+cmake -G "Ninja" ^
+  -DCMAKE_BUILD_TYPE=Release ^
+  -DOPENCV_EXTRA_MODULES_PATH=C:/Users/joems/Projects/opencv_contrib/modules ^
+  -DWITH_CUDA=ON ^
+  -DCUDA_ARCH_BIN=8.6 ^
+  -DWITH_CUDNN=ON ^
+  -DCUDNN_INCLUDE_DIR="C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v11.6/include" ^
+  -DCUDNN_LIBRARY="C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v11.6/lib/x64/cudnn.lib" ^
+  -DWITH_OPENGL=ON ^
+  -DWITH_TBB=ON ^
+  -DBUILD_opencv_python3=ON ^
+  -DPYTHON3_EXECUTABLE="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/python.exe" ^
+  -DPYTHON3_INCLUDE_DIR="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/include" ^
+  -DPYTHON3_LIBRARY="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/libs/python310.lib" ^
+  -DWITH_NASM=ON ^
+  -DWITH_VTK=ON ^
+  -DVTK_DIR="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/lib/cmake/vtk-9.2" ^
+  -DWITH_QT=ON ^
+  -DCMAKE_PREFIX_PATH="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library" ^
+  -DEIGEN_INCLUDE_PATH="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/include/eigen3" ^
+  -DGLOG_INCLUDE_DIR="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/include" ^
+  -DGLOG_LIBRARY="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/lib/glog.lib" ^
+  -DGFLAGS_INCLUDE_DIR="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/include" ^
+  -DGFLAGS_LIBRARY="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/lib/gflags_static.lib" ^
+  -DCeres_DIR="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/lib/cmake/Ceres" ^
+  -DHDF5_ROOT="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library" ^
+  -DOPENCV_ENABLE_NONFREE=ON ^
+  -DWITH_SFM=ON ^
+  -DWITH_AVIF=OFF ^
+  -DBUILD_ZLIB=OFF ^
+  -DCMAKE_USE_SYSTEM_ZLIB=ON ^
+  -DBUILD_TIFF=OFF ^
+  -DWITH_TIFF=ON ^
+  -DBUILD_JPEG=OFF ^
+  -DWITH_JPEG=ON ^
+  -DBUILD_PNG=OFF ^
+  -DWITH_PNG=ON ^
+  -DBUILD_OPENEXR=OFF ^
+  -DWITH_OPENEXR=ON ^
+  -DCMAKE_INSTALL_PREFIX=C:/Users/joems/Projects/opencv/install ^
+  C:/Users/joems/Projects/opencv
+
+
+
+
+
+
+## disabling AVIF because its causing errors, no matter how its attempted to be reinstalled and path flags set.
+  -DWITH_AVIF=ON ^
+  -DAVIF_INCLUDE_DIR="C:\\Users\\joems\\miniconda3\\envs\\eth3d_reconstruction\\Library\\include" ^
+  -DAVIF_LIBRARY="C:\\Users\\joems\\miniconda3\\envs\\eth3d_reconstruction\\Library\\lib\\avif.lib" ^
+
+
+
+## I have REMOVED these these. --> forcing opencv to use its own zlib.
+    -DZLIB_INCLUDE_DIR="C:\\Users\\joems\\miniconda3\\envs\\eth3d_reconstruction\\Library\\include" ^
+    -DZLIB_LIBRARY="C:\\Users\\joems\\miniconda3\\envs\\eth3d_reconstruction\\Library\\lib\\zlib.lib" ^
+
+## REMOVED THIS -> When using the vcpkg toolchain file, you should avoid setting the CMAKE_INSTALL_PREFIX, as vcpkg handles installation paths.
+##     -DCMAKE_INSTALL_PREFIX=C:\Users\joems\Projects\opencv\install ^ 
+
+
+## Other Errors.. conflict between Visual Studio's C++ Standard Library and the system's stdbool.h header. The key error is:
+# C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\VC\Tools\MSVC\14.29.30133\include\xkeycheck.h(53): warning C4005: 'bool': macro redefinition
+# C:\Users\joems\miniconda3\envs\eth3d_reconstruction\Library\include\stdbool.h(9): note: see previous definition of 'bool'
+# This is happening during the build of libtiff (specifically tif_stream.cxx). The issue stems from:
+## Conda's environment headers conflicting with MSVC headers. The order of include paths causing macro redefinition issues. Mixing of C and C++ standard library definitions.
+
+
+
+
+## Build OpenCV:
+
+ninja
+
+-> Error faced while installing: Being stuck here..
+
+
+
+Install OpenCV:
+
+ninja install
+
+
+Verify Installation:
+
+python -c "import cv2; print(cv2.getBuildInformation())"
+
+
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+Dependencies Analysis:
+Looking at explicit_packages.txt, various packages depend on zlib:
+
+
+ffmpeg
+fontconfig
+libarchive
+libzip
+many scientific and imaging libraries
+
+
+The VS Developer Command Prompt modifies environment variables and paths which, combined with the OpenCV build process, has affected Python's ability to find and load DLLs correctly. 
+
+The core issue here is interesting:
+    vcpkg's zlib worked because it was built with MSVC toolchain that matches your OpenCV build
+    Conda's zlib failed not because of the zlib itself, but because of how Python's ctypes interacts with DLLs
+
+
+DLL Search Path Issue:
+    Windows has a specific DLL search order
+    The vcpkg zlib is found first in the search path when building OpenCV
+    But Python can't find required DLLs for ctypes (libffi)
+
+VS Developer Command Prompt modifies PATH and other environment variables
+This affected DLL search order
+Different versions of the same DLLs (from vcpkg and Conda) caused conflicts
+
+
+OpenCV → zlib (vcpkg)
+Python → libffi → zlib (conda)
+
+Focus around solutions that follow these key features:
+    Creates a controlled build environment
+    Explicitly sets DLL paths
+    Preserves Python's ability to find its dependencies
+    Allows OpenCV to use vcpkg's dependencies while building
+    Maintains isolation between build and runtime environments
+
+
+
+## Keep vcpkg's zlib for OpenCV building
+
+
+
+
+
+
+
+
+
+
+
+
+
+Navigate to the Build Directory: Create the build directory if it doesn’t exist.
+Run CMake from the build directory while specifying the source directory as the main opencv directory.
+
+
+Create and Move into the Build Directory:
+
+mkdir C:\Users\joems\Projects\opencv\build
+
+cd C:\Users\joems\Projects\opencv\build
+
+
+
+Run CMake (from within the build directory but specify the source directory explicitly):
+
+
+cmake -G "Ninja" -DCMAKE_BUILD_TYPE=Release ^
+      -DCMAKE_INSTALL_PREFIX=C:\Users\joems\Projects\opencv\install ^
+      -DOPENCV_EXTRA_MODULES_PATH=C:\Users\joems\Projects\opencv_contrib\modules ^
+      -DWITH_CUDA=ON ^
+      -DCUDA_ARCH_BIN=8.6 ^
+      -DWITH_CUDNN=ON ^
+      -DCUDNN_INCLUDE_DIR="C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.6\include" ^
+      -DCUDNN_LIBRARY="C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.6\lib\x64\cudnn.lib" ^
+      -DWITH_OPENGL=ON ^
+      -DWITH_TBB=ON ^
+      -DBUILD_opencv_python3=ON ^
+      C:\Users\joems\Projects\opencv
+
+
+By adding C:\Users\joems\Projects\opencv at the end, you’re specifying the source directory for CMake, which resolves the "no source directory" issue. Try running these commands and let me know if the configuration succeeds.
+
+
+
+
+
+
+
+## -------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+## -------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+
+
+
+# -----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+!! MAKE SCRIPTS to uninstall base level, windows -  installed pip items. We dont want them to conflict with stuff.
+    Do an Analysis with help of powershell or such and make custom scripts step by step, for your system. 
+
+pip uninstall -y jupyterlab_server jupyterlab_pygments nbclient nbconvert nbformat notebook_shim pandocfilters pyzmq pywinpty Send2Trash terminado tornado traitlets voila nest-asyncio prometheus_client matplotlib-inline mistune
+
+pip uninstall -y contourpy cycler fonttools kiwisolver pyparsing webcolors
+
+pip uninstall -y numba llvmlite sympy networkx pynndescent umap-learn gymnasium Farama-Notifications joypy
+
+pip uninstall -y jsonschema jsonschema-specifications jsonpointer referencing rfc3339-validator rfc3986-validator isoduration uri-template
+
+
+pip uninstall -y mysql-connector-python
+
+pip uninstall -y h11 idna urllib3 sniffio
+
+pip uninstall -y beautifulsoup4 soupsieve defusedxml bleach
+
+pip uninstall -y loguru python-json-logger tenacity
+
+pip uninstall -y arrow asttokens executing stack-data pure-eval
+
+
+-----------------------------------------------------------------------------------------------------------------------------------------------
+
+!! MAKE SCRIPTS to remove packages installed in conda BASE without any environment, as they conflict.
+    Do an Analysis with help of conda commands or such and make custom scripts step by step, for your system. 
+
+# Make sure you're in base environment
+conda activate base
+
+# Remove potentially conflicting packages
+conda remove -n base --force pillow
+conda remove -n base --force pytorch torchvision torchaudio
+conda remove -n base --force notebook jupyter_core nbformat ipykernel
+conda remove -n base --force scipy numpy pandas matplotlib
+conda remove -n base --force scikit-learn
+conda remove -n base --force opencv
+
+# Clean conda cache
+conda clean --all -y
+
+# Verify removed packages
+conda list
+
+-----------------------------------------------------------------------------------------------------------------------------------------------
+
+CUDA:
+
+Carefully Uninstall CUDA related if already present. From Add or Remove Programs. Note that you have to remove VS Integration program as well if its present.
+
+Install CUDA 11.6.x, and CUDNN for CUDA 11.6.
+
+
+-------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+
+# -----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+``` Knowledge:
+OpenCV and opencv-contrib-python Versions: Both are now set to 4.5.5 and 4.5.5.64 respectively, ensuring compatibility.
+VTK Version: Set to 9.0.3, as confirmed in our previous discussions.
+CuPy and CUDA: Specified as cupy with cudatoolkit=11.6, matching the CUDA version required by PyTorch and CuPy.
+Channel Order: Retained the original order with pytorch, nvidia, conda-forge, and defaults while ensuring channel_priority is flexible.
+Python and PyTorch Versions: Python is set to 3.10, and PyTorch to 1.13.1, both compatible with CUDA 11.6 and aligned with the planned PyTorch3D version.
+
+Important Error:
+Invalid version: '-PKG-VERSION', indicates that the vtk package has an invalid version identifier, which disrupts the installation process. This issue often arises when vtk is installed via conda and then pip attempts to process it, leading to conflicts due to differing package management systems.
+
+
+PyVista is built on top of VTK, offering an intuitive Pythonic API that simplifies 3D mesh creation, visualization, and data handling. It makes complex rendering tasks more accessible, which would be beneficial as you explore 3D visualizations in your project.
+-> uses VTK's rendering engine, which can take advantage of GPU acceleration for visualization tasks. PyVista also provides a plotter interface, which can leverage GPU rendering when used with compatible hardware and VTK’s GPU capabilities.
+
+
+Visualize point clouds, meshes, and volumetric data.
+Generate interactive plots with ipyvtklink, enhancing usability within Jupyter Notebooks.
+Export 3D scenes to various formats for integration into other workflows.
+
+** Conda-forge packages, especially for compute-intensive libraries like PyVista and pymeshlab, are often built with compiler optimizations that enhance performance on various platforms. Trimesh also benefits from Conda’s optimized builds, especially when integrated with libraries for geometry processing, point cloud operations, and other memory-intensive tasks.
+
+
+
+VTK will remain flexible and pip-managed, reducing conflicts.
+Trimesh leverages Conda’s stable environment management.
+PyVista will have robust compatibility when installed through Conda, benefiting from Conda’s package management.
+
+```
+
+
+
+
+## If you want to use MAMBA FOR SPECIFIC VERSION. SPECIFIC PACKAGE? go for this.
+mamba remove opencv opencv-contrib-python opencv-python-headless opencv-contrib-python-headless libopencv py-opencv
+
+mamba install -c conda-forge opencv=4.5.4 opencv-contrib=4.5.4 libopencv=4.5.4 py-opencv=4.5.4
+
+
+
+
+

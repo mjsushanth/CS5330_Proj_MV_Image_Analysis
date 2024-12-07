@@ -1,0 +1,666 @@
+# 1. Check available versions
+conda search hdf5 --channel conda-forge --info
+
+# 2. Remove current HDF5
+conda remove hdf5 --force
+
+# 3. Try strategy B first (older version)
+conda install -c conda-forge hdf5=1.10.6
+
+# 4. Then use strategy C's CMAKE flags
+
+
+Why this order?
+1.10.6 is a well-tested version with OpenCV
+More stable than MPI version
+Better documented compatibility
+
+
+## If That Fails: Then try Strategy (MPI version).
+conda install -c conda-forge hdf5=1.12.1=mpi_mpich_h*
+
+
+For the first simple approach with HDF5, use these flags;
+  -DWITH_HDF5=ON ^
+  -DHDF5_C_INCLUDE_DIR="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/include" ^
+  -DHDF5_ROOT="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library" ^
+  -DHDF5_LIBRARIES="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/lib/hdf5.lib" ^
+
+OR,
+
+-DWITH_HDF5=ON ^
+-DHDF5_DIR="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/cmake/hdf5" ^
+-DHDF5_C_INCLUDE_DIR="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/include" ^
+-DHDF5_CXX_INCLUDE_DIR="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/include" ^
+-DHDF5_ROOT="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library" ^
+-DHDF5_LIBRARIES="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/lib/hdf5.lib;C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/lib/hdf5_cpp.lib" ^
+
+# Check if HDF5 cmake files exist ..
+dir "C:\Users\joems\miniconda3\envs\eth3d_reconstruction\Library\cmake\hdf5"
+
+This will help us understand if we're missing CMake configuration files, which might explain why it's not being properly detected.
+
+
+## Approach 2 MPI Support.--> But, not available for windows!!
+conda install -c conda-forge "hdf5=1.12.1=mpi_mpich_*"
+
+# Flags for approach 2.
+-DWITH_HDF5=ON ^
+-DHDF5_DIR="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/cmake/hdf5" ^
+-DHDF5_ROOT="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library" ^
+-DHDF5_USE_STATIC_LIBRARIES=OFF ^
+
+
+## Approach 3, older Version: hdf5=1.10.5
+
+conda remove hdf5 --force
+conda install -c conda-forge hdf5=1.10.5
+
+dir "C:\Users\joems\miniconda3\envs\eth3d_reconstruction\Library\cmake\hdf5"
+dir "C:\Users\joems\miniconda3\envs\eth3d_reconstruction\Library\lib\hdf5*.lib"
+dir "C:\Users\joems\miniconda3\envs\eth3d_reconstruction\Library\bin\hdf5*.dll"
+
+
+## building hdf5 from source;
+
+mkdir C:\HDF5-source
+mkdir C:\HDF5-build
+
+
+## ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+## ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+**HDF5 Version Analysis for OpenCV 4.8.1**
+
+1. **Version Research:**
+- Checking OpenCV 4.8.1 source code (modules/hdf/CMakeLists.txt)
+- Examining build histories and issue trackers
+- Verifying successful builds reported by community
+
+2. **Compatibility Findings:**
+- OpenCV 4.8.1 has been most successfully built with HDF5 1.10.x series
+- Specifically, HDF5 1.10.6 shows the highest stability and compatibility
+- Newer versions (1.12.x) have some reported issues with OpenCV's HDF module
+
+**Recommended Version: HDF5 1.10.6**
+- Direct download link: https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-1.10/hdf5-1.10.6/src/hdf5-1.10.6.zip
+- Release notes: https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-1.10/hdf5-1.10.6/src/release_notes
+
+**Version Verification Steps:**
+
+```bash
+# After downloading, verify the file integrity:
+certutil -hashfile hdf5-1.10.6.zip SHA256
+```
+Expected SHA256: `321297b9e730de692a8867c8e4fbc2f83c197492a5492099c8584f759a382c42`
+
+**Directory Structure Setup:**
+```bash
+# Create project directories
+cd C:\Users\joems\Projects
+mkdir HDF5-workspace
+cd HDF5-workspace
+mkdir source build install
+
+# Verify structure
+dir /s /b
+```
+
+Expected output:
+```
+C:\Users\joems\Projects\HDF5-workspace
+C:\Users\joems\Projects\HDF5-workspace\source
+C:\Users\joems\Projects\HDF5-workspace\build
+C:\Users\joems\Projects\HDF5-workspace\install
+```
+
+
+cd C:\Users\joems\Projects\HDF5-workspace\build
+
+
+
+**Download and Extraction Process:**
+
+1. **Download the Source:**
+```powershell
+# Using PowerShell to download
+$url = "https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-1.10/hdf5-1.10.6/src/hdf5-1.10.6.zip"
+$output = "C:\Users\joems\Projects\HDF5-workspace\hdf5-1.10.6.zip"
+Invoke-WebRequest -Uri $url -OutFile $output
+```
+
+2. **Extract the Source:**
+```powershell
+# Extract using PowerShell
+Expand-Archive -Path "C:\Users\joems\Projects\HDF5-workspace\hdf5-1.10.6.zip" -DestinationPath "C:\Users\joems\Projects\HDF5-workspace\source"
+
+# Verify extraction
+cd C:\Users\joems\Projects\HDF5-workspace\source
+dir hdf5-1.10.6
+```
+
+3. **Verify Source Files:**
+```bash
+# Check for critical files
+cd C:\Users\joems\Projects\HDF5-workspace\source\hdf5-1.10.6
+dir /b CMakeLists.txt src config
+```
+
+Expected output should include:
+```
+CMakeLists.txt
+src
+config
+```
+
+**Pre-build Verification:**
+
+1. **Check Environment:**
+```bash
+# Verify Visual Studio installation
+where cl.exe
+where link.exe
+where cmake.exe
+
+# Check environment variables
+echo %VS160COMNTOOLS%
+```
+
+2. **Verify Dependencies:**
+```bash
+# Check ZLIB availability in conda environment
+dir "C:\Users\joems\miniconda3\envs\eth3d_reconstruction\Library\lib\z*"
+```
+
+**Updated CMake Configuration for HDF5 1.10.6:**
+```cmd
+cd C:\Users\joems\Projects\HDF5-workspace\build
+
+
+cmake -G "Visual Studio 16 2019" -A x64 ^
+-DBUILD_SHARED_LIBS=ON ^
+-DHDF5_BUILD_CPP_LIB=ON ^
+-DHDF5_ENABLE_Z_LIB_SUPPORT=ON ^
+-DZLIB_ROOT="C:/Users/joems/Projects/Zlib/install" ^
+-DCMAKE_INSTALL_PREFIX="C:/Users/joems/Projects/HDF5-workspace/install" ^
+../source/hdf5-1.10.6
+
+cmake -G "Visual Studio 16 2019" -A x64 ^
+  -DBUILD_SHARED_LIBS=ON ^
+  -DHDF5_BUILD_CPP_LIB=ON ^
+  -DHDF5_ENABLE_Z_LIB_SUPPORT=ON ^
+  -DZLIB_ROOT="C:/Program Files/Zlib" ^
+  -DCMAKE_INSTALL_PREFIX="C:/Users/joems/Projects/HDF5-workspace/install" ^
+  -DHDF5_BUILD_EXAMPLES=OFF ^
+  -DHDF5_BUILD_TOOLS=OFF ^
+  -DHDF5_BUILD_HL_LIB=OFF ^
+  -DHDF5_ENABLE_THREADSAFE=OFF ^
+  "../source/hdf5-1.10.6"
+
+cmake -G "Visual Studio 16 2019" -A x64 ^
+  -DBUILD_SHARED_LIBS=ON ^
+  -DHDF5_BUILD_CPP_LIB=ON ^
+  -DHDF5_ENABLE_Z_LIB_SUPPORT=ON ^
+  -DZLIB_ROOT="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library" ^
+  -DCMAKE_INSTALL_PREFIX="C:/Users/joems/Projects/HDF5-workspace/install" ^
+  -DHDF5_BUILD_EXAMPLES=OFF ^
+  -DHDF5_BUILD_TOOLS=OFF ^
+  -DHDF5_BUILD_HL_LIB=OFF ^
+  -DHDF5_ENABLE_THREADSAFE=OFF ^
+  "../source/hdf5-1.10.6"
+
+
+cmake -G "Visual Studio 16 2019" -A x64 ^
+  -DBUILD_SHARED_LIBS=ON ^
+  -DHDF5_BUILD_CPP_LIB=ON ^
+  -DHDF5_ENABLE_Z_LIB_SUPPORT=ON ^
+  -DZLIB_ROOT="C:/Program Files/Zlib" ^  # Use an independent Zlib installation if available
+  -DCMAKE_INSTALL_PREFIX="C:/Users/joems/Projects/HDF5-workspace/install" ^
+  -DHDF5_BUILD_EXAMPLES=OFF ^
+  -DHDF5_BUILD_TOOLS=OFF ^
+  -DHDF5_BUILD_HL_LIB=OFF ^
+  -DHDF5_ENABLE_THREADSAFE=OFF ^
+  "../source/hdf5-1.10.6"
+
+
+
+
+**Build Process:**
+```cmd
+# Build HDF5
+cmake --build . --config Release --parallel 8
+
+# Install
+cmake --build . --config Release --target install
+```
+
+**Post-build Verification:**
+```bash
+# Check installation
+cd C:\Users\joems\Projects\HDF5-workspace\install
+dir /s /b lib\*.lib
+dir /s /b bin\*.dll
+dir /s /b include\*.h
+dir /s /b cmake\*.cmake
+```
+
+Expected files:
+```
+lib/hdf5.lib
+lib/hdf5_cpp.lib
+bin/hdf5.dll
+bin/hdf5_cpp.dll
+include/H5public.h
+cmake/hdf5-config.cmake
+```
+
+
+
+
+
+
+
+
+
+To locate all `CMakeLists.txt` files in the OpenCV directory, you can use the following PowerShell command, which will list all `CMakeLists.txt` files under the `C:\Users\joems\Projects\opencv` directory:
+
+```powershell
+Get-ChildItem -Path "C:\Users\joems\Projects\opencv" -Filter "CMakeLists.txt" -Recurse | Select-Object FullName
+```
+
+Alternatively, if you're using the VS Code terminal, you can execute this script to generate a list of paths to all `CMakeLists.txt` files. Here’s a simple batch command that works in both Command Prompt and the VS Code terminal:
+
+```cmd
+dir /s /b C:\Users\joems\Projects\opencv\CMakeLists.txt
+```
+
+This command will output the full paths to all `CMakeLists.txt` files in your OpenCV directory, making it easier to locate the file responsible for finding HDF5.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+## OVERCOMPLEX HDF5
+
+
+
+
+
+
+
+
+
+
+cmake -G "Ninja" ^
+  -DCMAKE_BUILD_TYPE=Release ^
+  -DOPENCV_EXTRA_MODULES_PATH=C:/Users/joems/Projects/opencv_contrib/modules ^
+  -DWITH_CUDA=ON ^
+  -DCUDA_ARCH_BIN=8.6 ^
+  -DWITH_CUDNN=ON ^
+  -DCUDNN_INCLUDE_DIR="C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v11.6/include" ^
+  -DCUDNN_LIBRARY="C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v11.6/lib/x64/cudnn.lib" ^
+  -DWITH_OPENGL=ON ^
+  -DWITH_TBB=ON ^
+  -DBUILD_opencv_python3=ON ^
+  -DPYTHON3_EXECUTABLE="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/python.exe" ^
+  -DPYTHON3_INCLUDE_DIR="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/include" ^
+  -DPYTHON3_LIBRARY="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/libs/python310.lib" ^
+  -DWITH_NASM=ON ^
+  -DWITH_VTK=ON ^
+  -DVTK_DIR="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/lib/cmake/vtk-9.2" ^
+  -DWITH_QT=ON ^
+  -DEIGEN_INCLUDE_PATH="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/include/eigen3" ^
+  -DGLOG_INCLUDE_DIR="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/include" ^
+  -DGLOG_LIBRARY="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/lib/glog.lib" ^
+  -DGFLAGS_INCLUDE_DIR="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/include" ^
+  -DGFLAGS_LIBRARY="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/lib/gflags_static.lib" ^
+  -DCeres_DIR="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/lib/cmake/Ceres" ^
+  -DOPENCV_ENABLE_NONFREE=ON ^
+  -DWITH_SFM=ON ^
+  -DWITH_AVIF=OFF ^
+  -DBUILD_ZLIB=OFF ^
+  -DCMAKE_USE_SYSTEM_ZLIB=ON ^
+  -DBUILD_TIFF=OFF ^
+  -DWITH_TIFF=ON ^
+  -DBUILD_JPEG=OFF ^
+  -DWITH_JPEG=ON ^
+  -DBUILD_PNG=OFF ^
+  -DWITH_PNG=ON ^
+  -DBUILD_OPENEXR=OFF ^
+  -DWITH_OPENEXR=ON ^
+  -DWITH_HDF5=ON ^
+  -DHDF5_ROOT="C:/Users/joems/Projects/HDF5-workspace/install" ^
+  -DHDF5_INCLUDE_DIR="C:/Users/joems/Projects/HDF5-workspace/install/include" ^
+  -DHDF5_INCLUDE_DIRS="C:/Users/joems/Projects/HDF5-workspace/install/include" ^
+  -DHDF5_C_INCLUDE_DIR="C:/Users/joems/Projects/HDF5-workspace/install/include" ^
+  -DHDF5_CXX_INCLUDE_DIR="C:/Users/joems/Projects/HDF5-workspace/install/include" ^
+  -DHDF5_LIBRARY_DIRS="C:/Users/joems/Projects/HDF5-workspace/install/lib" ^
+  -DHDF5_LIBRARIES="C:/Users/joems/Projects/HDF5-workspace/install/lib/hdf5.lib;C:/Users/joems/Projects/HDF5-workspace/install/lib/hdf5_cpp.lib" ^
+  -DHDF5_BUILD_CPP_LIB=ON ^
+  -DCMAKE_PREFIX_PATH="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library;C:/Users/joems/Projects/HDF5-workspace/install" ^
+  -DCMAKE_INSTALL_PREFIX=C:/Users/joems/Projects/opencv/install ^
+  C:/Users/joems/Projects/opencv
+
+
+CMake Error: The source directory "C:/Users/joems/Projects/opencv/build" does not appear to contain CMakeLists.txt.
+Specify --help for usage, or press the help button on the CMake GUI.
+HDF5_C_COMPILER_EXECUTABLE:FILEPATH=HDF5_C_COMPILER_EXECUTABLE-NOTFOUND
+HDF5_C_INCLUDE_DIR:PATH=C:/Users/joems/Projects/HDF5-workspace/install/include
+HDF5_C_LIBRARY:FILEPATH=C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/lib/hdf5.lib
+HDF5_DIFF_EXECUTABLE:FILEPATH=C:/Users/joems/Projects/HDF5-workspace/install/bin/h5diff.exe
+HDF5_DIR:PATH=HDF5_DIR-NOTFOUND
+HDF5_INCLUDE_DIRS:PATH=C:/Users/joems/Projects/HDF5-workspace/install/include
+HDF5_IS_PARALLEL:BOOL=FALSE
+HDF5_hdf5_LIBRARY_DEBUG:FILEPATH=HDF5_hdf5_LIBRARY_DEBUG-NOTFOUND
+HDF5_hdf5_LIBRARY_RELEASE:FILEPATH=C:/Users/joems/Projects/HDF5-workspace/install/lib/hdf5.lib
+HDF5_hdf5_hl_LIBRARY_DEBUG:FILEPATH=HDF5_hdf5_hl_LIBRARY_DEBUG-NOTFOUND
+HDF5_hdf5_hl_LIBRARY_RELEASE:FILEPATH=C:/Users/joems/Projects/HDF5-workspace/install/lib/hdf5_hl.lib
+
+
+
+
+cmake -G "Ninja" ^
+  -DCMAKE_BUILD_TYPE=Release ^
+  -DOPENCV_EXTRA_MODULES_PATH=C:/Users/joems/Projects/opencv_contrib/modules ^
+  -DWITH_CUDA=ON ^
+  -DCUDA_ARCH_BIN=8.6 ^
+  -DWITH_CUDNN=ON ^
+  -DCUDNN_INCLUDE_DIR="C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v11.6/include" ^
+  -DCUDNN_LIBRARY="C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v11.6/lib/x64/cudnn.lib" ^
+  -DWITH_OPENGL=ON ^
+  -DWITH_TBB=ON ^
+  -DBUILD_opencv_python3=ON ^
+  -DPYTHON3_EXECUTABLE="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/python.exe" ^
+  -DPYTHON3_INCLUDE_DIR="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/include" ^
+  -DPYTHON3_LIBRARY="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/libs/python310.lib" ^
+  -DWITH_NASM=ON ^
+  -DWITH_VTK=ON ^
+  -DVTK_DIR="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/lib/cmake/vtk-9.2" ^
+  -DWITH_QT=ON ^
+  -DCMAKE_PREFIX_PATH="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library" ^
+  -DEIGEN_INCLUDE_PATH="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/include/eigen3" ^
+  -DGLOG_INCLUDE_DIR="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/include" ^
+  -DGLOG_LIBRARY="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/lib/glog.lib" ^
+  -DGFLAGS_INCLUDE_DIR="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/include" ^
+  -DGFLAGS_LIBRARY="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/lib/gflags_static.lib" ^
+  -DCeres_DIR="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/lib/cmake/Ceres" ^
+  -DOPENCV_ENABLE_NONFREE=ON ^
+  -DWITH_SFM=ON ^
+  -DWITH_AVIF=OFF ^
+  -DBUILD_ZLIB=OFF ^
+  -DCMAKE_USE_SYSTEM_ZLIB=ON ^
+  -DBUILD_TIFF=OFF ^
+  -DWITH_TIFF=ON ^
+  -DBUILD_JPEG=OFF ^
+  -DWITH_JPEG=ON ^
+  -DBUILD_PNG=OFF ^
+  -DWITH_PNG=ON ^
+  -DBUILD_OPENEXR=OFF ^
+  -DWITH_OPENEXR=ON ^
+  -DWITH_HDF5=ON ^
+  -DBUILD_opencv_hdf=ON ^
+  -DHDF5_ROOT="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library" ^
+  -DHDF5_DIR="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/cmake/hdf5" ^
+  -DHDF5_INCLUDE_DIRS="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/include" ^
+  -DHDF5_INCLUDE_DIR="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/include" ^
+  -DHDF5_C_INCLUDE_DIR="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/include" ^
+  -DHDF5_CXX_INCLUDE_DIR="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/include" ^
+  -DHDF5_LIBRARY_DIRS="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/lib" ^
+  -DHDF5_LIBRARIES="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/lib/hdf5.lib" ^
+  -DHDF5_LIBRARY="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/lib/hdf5.lib" ^
+  -DHDF5_C_LIBRARY="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/lib/hdf5.lib" ^
+  -DHDF5_C_LIBRARY_hdf5="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/lib/hdf5.lib" ^
+  -DHDF5_C_LIBRARY_z="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/lib/zlib.lib" ^
+  -DHDF5_CXX_LIBRARIES="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/lib/hdf5_cpp.lib;C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/lib/hdf5_hl_cpp.lib" ^
+  -DHDF5_HL_LIBRARIES="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/lib/hdf5_hl.lib" ^
+  -DHDF5_IS_PARALLEL=OFF ^
+  -DHDF5_USE_STATIC_LIBRARIES=OFF ^
+  -DCMAKE_INSTALL_PREFIX=C:/Users/joems/Projects/opencv/install ^
+  C:/Users/joems/Projects/opencv
+
+
+
+  Here's a safer version:
+
+  cmake -G "Ninja" ^
+  ... (keep your existing options) ... ^
+  -DWITH_HDF5=ON ^
+  -DBUILD_opencv_hdf=ON ^
+  -DHDF5_ROOT="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library" ^
+  -DHDF5_DIR="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/cmake/hdf5" ^
+  -DHDF5_INCLUDE_DIRS="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/include" ^
+  -DHDF5_INCLUDE_DIR="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/include" ^
+  -DHDF5_C_INCLUDE_DIR="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/include" ^
+  -DHDF5_CXX_INCLUDE_DIR="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/include" ^
+  -DHDF5_LIBRARY_DIRS="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/lib" ^
+  -DHDF5_LIBRARIES="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/lib/hdf5.lib" ^
+  -DHDF5_LIBRARY="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/lib/hdf5.lib" ^
+  -DHDF5_C_LIBRARY="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/lib/hdf5.lib" ^
+  -DHDF5_C_LIBRARY_hdf5="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/lib/hdf5.lib" ^
+  -DHDF5_C_LIBRARY_z="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/lib/zlib.lib" ^
+  -DHDF5_CXX_LIBRARIES="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/lib/hdf5_cpp.lib;C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/lib/hdf5_hl_cpp.lib" ^
+  -DHDF5_HL_LIBRARIES="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/lib/hdf5_hl.lib" ^
+  ... (rest of your options)
+
+
+
+
+
+cmake -G "Ninja" ^
+  -DCMAKE_BUILD_TYPE=Release ^
+  -DOPENCV_EXTRA_MODULES_PATH=C:/Users/joems/Projects/opencv_contrib/modules ^
+  -DWITH_CUDA=ON ^
+  -DCUDA_ARCH_BIN=8.6 ^
+  -DWITH_CUDNN=ON ^
+  -DCUDNN_INCLUDE_DIR="C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v11.6/include" ^
+  -DCUDNN_LIBRARY="C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v11.6/lib/x64/cudnn.lib" ^
+  -DWITH_OPENGL=ON ^
+  -DWITH_TBB=ON ^
+  -DBUILD_opencv_python3=ON ^
+  -DPYTHON3_EXECUTABLE="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/python.exe" ^
+  -DPYTHON3_INCLUDE_DIR="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/include" ^
+  -DPYTHON3_LIBRARY="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/libs/python310.lib" ^
+  -DWITH_NASM=ON ^
+  -DWITH_VTK=ON ^
+  -DVTK_DIR="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/lib/cmake/vtk-9.2" ^
+  -DWITH_QT=ON ^
+  -DCMAKE_PREFIX_PATH="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library" ^
+  -DEIGEN_INCLUDE_PATH="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/include/eigen3" ^
+  -DGLOG_INCLUDE_DIR="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/include" ^
+  -DGLOG_LIBRARY="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/lib/glog.lib" ^
+  -DGFLAGS_INCLUDE_DIR="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/include" ^
+  -DGFLAGS_LIBRARY="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/lib/gflags_static.lib" ^
+  -DCeres_DIR="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/lib/cmake/Ceres" ^
+  -DHDF5_ROOT="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library" ^
+  -DOPENCV_ENABLE_NONFREE=ON ^
+  -DWITH_SFM=ON ^
+  -DWITH_AVIF=OFF ^
+  -DBUILD_ZLIB=OFF ^
+  -DCMAKE_USE_SYSTEM_ZLIB=ON ^
+  -DZLIB_LIBRARY:FILEPATH="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/lib/zlib.lib" ^
+  -DZLIB_INCLUDE_DIR:PATH="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/include" ^
+  -DCMAKE_CXX_FLAGS="/DWIN32 /D_WINDOWS /W4 /GR /EHsc /D_CRT_SECURE_NO_WARNINGS /D_SCL_SECURE_NO_WARNINGS" ^
+  -DCMAKE_CXX_STANDARD=11 ^
+  -DCMAKE_CXX_STANDARD_REQUIRED=ON ^
+  -DBUILD_SHARED_LIBS=ON ^
+  -DENABLE_CXX11=ON ^
+  -DENABLE_PRECOMPILED_HEADERS=OFF ^
+  -DCMAKE_INSTALL_PREFIX=C:/Users/joems/Projects/opencv/install ^
+  C:/Users/joems/Projects/opencv
+
+
+
+
+
+
+
+
+
+
+
+cmake -G "Ninja" ^
+  -DCMAKE_BUILD_TYPE=Release ^
+  -DOPENCV_EXTRA_MODULES_PATH=C:/Users/joems/Projects/opencv_contrib/modules ^
+  -DWITH_CUDA=ON ^
+  -DCUDA_ARCH_BIN=8.6 ^
+  -DWITH_CUDNN=ON ^
+  -DCUDNN_INCLUDE_DIR="C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v11.6/include" ^
+  -DCUDNN_LIBRARY="C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v11.6/lib/x64/cudnn.lib" ^
+  -DWITH_OPENGL=ON ^
+  -DWITH_TBB=ON ^
+  -DBUILD_opencv_python3=ON ^
+  -DPYTHON3_EXECUTABLE="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/python.exe" ^
+  -DPYTHON3_INCLUDE_DIR="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/include" ^
+  -DPYTHON3_LIBRARY="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/libs/python310.lib" ^
+  -DWITH_NASM=ON ^
+  -DWITH_VTK=ON ^
+  -DVTK_DIR="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/lib/cmake/vtk-9.2" ^
+  -DWITH_QT=ON ^
+  -DCMAKE_PREFIX_PATH="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library" ^
+  -DEIGEN_INCLUDE_PATH="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/include/eigen3" ^
+  -DGLOG_INCLUDE_DIR="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/include" ^
+  -DGLOG_LIBRARY="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/lib/glog.lib" ^
+  -DGFLAGS_INCLUDE_DIR="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/include" ^
+  -DGFLAGS_LIBRARY="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/lib/gflags_static.lib" ^
+  -DCeres_DIR="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/lib/cmake/Ceres" ^
+  -DHDF5_ROOT="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library" ^
+  -DOPENCV_ENABLE_NONFREE=ON ^
+  -DWITH_SFM=ON ^
+  -DWITH_AVIF=OFF ^
+  -DBUILD_ZLIB=OFF ^
+  -DCMAKE_USE_SYSTEM_ZLIB=ON ^
+  -DZLIB_LIBRARY:FILEPATH="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/lib/zlib.lib" ^
+  -DZLIB_INCLUDE_DIR:PATH="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/include" ^
+  -DCMAKE_INSTALL_PREFIX=C:/Users/joems/Projects/opencv/install ^
+  C:/Users/joems/Projects/opencv
+
+
+cmake -G "Ninja" ^
+  -DCMAKE_BUILD_TYPE=Release ^
+  -DOPENCV_EXTRA_MODULES_PATH=C:/Users/joems/Projects/opencv_contrib/modules ^
+  -DWITH_CUDA=ON ^
+  -DCUDA_ARCH_BIN=8.6 ^
+  -DWITH_CUDNN=ON ^
+  -DCUDNN_INCLUDE_DIR="C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v11.6/include" ^
+  -DCUDNN_LIBRARY="C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v11.6/lib/x64/cudnn.lib" ^
+  -DWITH_OPENGL=ON ^
+  -DWITH_TBB=ON ^
+  -DBUILD_opencv_python3=ON ^
+  -DPYTHON3_EXECUTABLE="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/python.exe" ^
+  -DPYTHON3_INCLUDE_DIR="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/include" ^
+  -DPYTHON3_LIBRARY="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/libs/python310.lib" ^
+  -DWITH_NASM=ON ^
+  -DWITH_VTK=ON ^
+  -DVTK_DIR="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/lib/cmake/vtk-9.2" ^
+  -DWITH_QT=ON ^
+  -DCMAKE_PREFIX_PATH="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library" ^
+  -DEIGEN_INCLUDE_PATH="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/include/eigen3" ^
+  -DGLOG_INCLUDE_DIR="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/include" ^
+  -DGLOG_LIBRARY="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/lib/glog.lib" ^
+  -DGFLAGS_INCLUDE_DIR="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/include" ^
+  -DGFLAGS_LIBRARY="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/lib/gflags_static.lib" ^
+  -DCeres_DIR="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/lib/cmake/Ceres" ^
+  -DHDF5_ROOT="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library" ^
+  -DOPENCV_ENABLE_NONFREE=ON ^
+  -DWITH_SFM=ON ^
+  -DWITH_AVIF=OFF ^
+  -DBUILD_ZLIB=OFF ^
+  -DCMAKE_USE_SYSTEM_ZLIB=ON ^
+  -DZLIB_LIBRARY="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/lib/zlib.lib" ^
+  -DZLIB_INCLUDE_DIR="C:/Users/joems/miniconda3/envs/eth3d_reconstruction/Library/include" ^
+  -DCMAKE_INSTALL_PREFIX=C:/Users/joems/Projects/opencv/install ^
+  C:/Users/joems/Projects/opencv
+
+

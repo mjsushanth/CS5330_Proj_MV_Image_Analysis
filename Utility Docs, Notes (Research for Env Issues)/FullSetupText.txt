@@ -1,0 +1,363 @@
+## Full Removal on Base WINDOWS; not on conda base:
+
+pip uninstall -y jupyterlab_server jupyterlab_pygments nbclient nbconvert nbformat notebook_shim pandocfilters pyzmq pywinpty Send2Trash terminado tornado traitlets voila nest-asyncio prometheus_client matplotlib-inline mistune contourpy cycler fonttools kiwisolver pyparsing webcolors numba llvmlite sympy networkx pynndescent umap-learn gymnasium Farama-Notifications joypy jsonschema jsonschema-specifications jsonpointer referencing rfc3339-validator rfc3986-validator isoduration uri-template mysql-connector-python h11 idna urllib3 sniffio beautifulsoup4 soupsieve defusedxml bleach loguru python-json-logger tenacity arrow asttokens executing stack-data pure-eval
+
+
+# If removed critical packages on CONDA BASE, verify.
+# IF missing, Reinstall urllib3, its important on conda base. dont remove on conda base.
+
+## -------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+## REMOVAL, CLEANING on CONDA BASE:
+conda env remove -n eth3d_reconstruction
+
+# CACHE REMOVAL ON CONDA BASE:
+conda clean --packages --index-cache --tarballs
+
+## -------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+# SET PRIORITY to strict and ensure it, check the print.
+conda config --set channel_priority strict
+conda config --show | findstr "channel_priority"
+
+By setting the channel priority to strict, we ensure that Conda prioritizes packages from the top-listed channels (e.g., pytorch, nvidia) before falling back to other sources like conda-forge. This approach minimizes the risk of incompatibilities between critical packages like PyTorch and CUDA, which are often more thoroughly tested within their own ecosystems.
+
+
+# NOW, if repeated failures are happening with the YML file, then swtich to flexible. (i used flexible.)
+
+conda config --set channel_priority flexible
+conda config --show | findstr "channel_priority"
+
+## -------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+## Variables that you could benefit with.
+
+set CUDA_HOME="C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.6"
+set TORCH_CUDA_ARCH_LIST=8.6
+set CONDA_ALWAYS_YES=true
+
+## -------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+# REINSTALLING WITH MAMBA ! ! ! 
+
+cd "C:\Users\joems\OneDrive\Desktop\MLCV Project Items\Comp Vision CS 5330"
+
+conda env remove -n eth3d_reconstruction
+
+mamba env create -f eth3d_reconstruction.yml
+
+conda activate eth3d_reconstruction
+
+## -------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+## MOVING onto pytorch3d install.
+
+conda activate eth3d_reconstruction
+
+
+
+## CHECKS; ----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+mamba list
+
+python -c "import cv2; print('OpenCV Version:', cv2.__version__); print('CUDA enabled:', cv2.cuda.getCudaEnabledDeviceCount() > 0); print('Build info CUDA:', 'cuda' in cv2.getBuildInformation().lower())"
+
+python -c "import ctypes; print('ctypes loaded successfully')"
+
+python -c "import torch; print(f'PyTorch Version: {torch.__version__}\nCUDA Available: {torch.cuda.is_available()}\nCUDA Version: {torch.version.cuda}\nGPU Device: {torch.cuda.get_device_name(0) if torch.cuda.is_available() else \"No GPU available\"}\nNumber of GPUs: {torch.cuda.device_count()}')"
+
+
+
+
+## -------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+## -------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+## Step-by-step outline to install PyTorch3D on your setup, incorporating analysis and ensuring we’re in the correct environment for each phase. 
+
+---
+
+### 1. Initial Setup and Repository Cloning (Miniconda Prompt)
+
+1. **Open Miniconda Prompt** and initialize Conda:
+   ```bash
+   conda init
+   ```
+   - **Close** and **reopen** the Miniconda Prompt after running `conda init`.
+
+2. **Activate your Conda environment**:
+   ```bash
+   conda activate eth3d_reconstruction
+   ```
+
+3. **Set Miniconda Scripts in the PATH temporarily**:
+   ```bash
+   set PATH=C:\Users\joems\miniconda3\Scripts;%PATH%
+   ```
+
+4. **Clone the PyTorch3D repository**:
+   ```bash
+   cd C:\Users\joems\Projects
+   git clone https://github.com/facebookresearch/pytorch3d.git
+   ```
+
+5. **Navigate to the PyTorch3D directory**:
+   ```bash
+   cd pytorch3d
+   ```
+
+6. **Pull the latest changes** (optional but recommended):
+   ```bash
+   git pull origin main
+   ```
+
+### 2. Set Environment Variables (VS Code Developer Command Prompt)
+
+1. **Open the VS Code Developer Command Prompt for VS 2019**.
+
+2. **Navigate to the PyTorch3D directory**:
+   ```bash
+   cd C:\Users\joems\Projects\pytorch3d
+   ```
+
+3. **Activate your Conda environment in the same prompt**:
+   ```bash
+   conda activate eth3d_reconstruction
+   ```
+
+4. **Set CUDA Architecture and CUDA Path**:
+   - Since your GPU (RTX 3080) has a compute capability of 8.6:
+   ```bash
+   set TORCH_CUDA_ARCH_LIST=8.6
+   set CUDA_HOME=C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.6
+   ```
+
+5. **Add Conda Library bin to PATH temporarily**:
+   ```bash
+   set PATH=C:\Users\joems\miniconda3\Library\bin;%PATH%
+   ```
+
+6. **Check `ctypes` compatibility**:
+   ```bash
+   python -c "import ctypes; print('ctypes loaded successfully')"
+   ```
+
+### 3. Prepare the Environment for Building PyTorch3D (VS Code Developer Command Prompt)
+
+1. **Ensure required packages are installed or updated**:
+   ```bash
+   pip install fvcore iopath
+   ```
+
+2. **Set additional environment variables for building**:
+   ```bash
+   set DISTUTILS_USE_SDK=1
+   set PYTORCH3D_NO_NINJA=1
+   set MAX_JOBS=4
+   ```
+
+3. **Clean Previous Build Files**:
+   - If you have previously built PyTorch3D, clean up old build files to avoid conflicts:
+   ```bash
+   python setup.py clean
+   rmdir /S /Q build
+   rmdir /S /Q dist
+   rmdir /S /Q pytorch3d.egg-info
+   ```
+
+4. **Verify `link.exe` from VS Build Tools**:
+   - In the Miniconda environment, Conda’s `link.exe` can conflict with the MSVC linker. We’ll temporarily rename it to ensure only the MSVC linker is used:
+   ```bash
+   cd C:\Users\joems\miniconda3\envs\eth3d_reconstruction\Library\usr\bin
+   rename link.exe link_bak.exe
+   ```
+
+### 4. Compile and Install PyTorch3D (VS Code Developer Command Prompt)
+
+1. **Return to the PyTorch3D directory**:
+   ```bash
+   cd C:\Users\joems\Projects\pytorch3d
+   ```
+
+2. **Set Visual Studio Paths and Configure**:
+   - Ensure Visual Studio 2019 paths are included for compatibility:
+   ```bash
+   set VS2019_PATH="C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools"
+   set PATH=%VS2019_PATH%\VC\Tools\MSVC\14.29.30133\bin\Hostx64\x64;%PATH%
+   ```
+
+3. **Verify the correct linker is in use**:
+   ```bash
+   where link.exe
+   ```
+   - This should point to the MSVC linker within Visual Studio 2019’s toolchain.
+
+4. **Install PyTorch3D**:
+   ```bash
+   python setup.py install
+   ```
+
+### 5. Verify Installation and Restore Environment
+
+1. **Restore the original `link.exe`** (in case Conda tools need it):
+   ```bash
+   cd C:\Users\joems\miniconda3\envs\eth3d_reconstruction\Library\usr\bin
+   rename link_bak.exe link.exe
+   ```
+
+2. **Run verification commands**:
+   - Basic check for PyTorch3D version:
+     ```bash
+     python -c "import pytorch3d; print(f'PyTorch3D version: {pytorch3d.__version__}')"
+     ```
+
+   - Full verification, checking PyTorch, CUDA, and GPU availability:
+     ```bash
+     python -c "import torch; import pytorch3d; print(f'PyTorch version: {torch.__version__}\nPyTorch3D version: {pytorch3d.__version__}\nCUDA Available: {torch.cuda.is_available()}\nCUDA Version: {torch.version.cuda}\nGPU Device: {torch.cuda.get_device_name(0) if torch.cuda.is_available() else \"No GPU\"}')"
+     ```
+
+### 6. Create and Configure Jupyter Kernel for the Environment
+
+1. **Install Jupyter kernel and notebook requirements**: OPTIONAL: notice your yml, it already includes this stuff.
+   ```bash
+   conda install -y ipykernel jupyter jupyterlab notebook
+   ```
+
+2. **Create a kernel for the `eth3d_reconstruction` environment**:
+   ```bash
+   python -m ipykernel install --user --name eth3d_reconstruction --display-name "Python (eth3d_reconstruction)"
+   ```
+
+---
+
+By creating a kernel specific to eth3d_reconstruction, you ensure that all code in a Jupyter notebook session uses the packages, versions, and configurations defined in that environment. This eliminates potential conflicts with other environments or the base installation.
+
+PyTorch3D Version: Correctly installed as version 0.7.4.
+PyTorch Version: Matches your specified version, 1.13.1.
+CUDA Availability: Recognized and available with version 11.6, fully compatible with your environment.
+GPU Detection: Successfully detects your NVIDIA GeForce RTX 3080 Ti.
+
+## -------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+## -------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+# -----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+!! MAKE SCRIPTS to uninstall base level, windows - cmd installed pip items. We dont want them to conflict with stuff.
+    Do an Analysis with help of powershell or such and make custom scripts step by step, for your system. 
+
+pip uninstall -y jupyterlab_server jupyterlab_pygments nbclient nbconvert nbformat notebook_shim pandocfilters pyzmq pywinpty Send2Trash terminado tornado traitlets voila nest-asyncio prometheus_client matplotlib-inline mistune
+
+pip uninstall -y contourpy cycler fonttools kiwisolver pyparsing webcolors
+
+pip uninstall -y numba llvmlite sympy networkx pynndescent umap-learn gymnasium Farama-Notifications joypy
+
+pip uninstall -y jsonschema jsonschema-specifications jsonpointer referencing rfc3339-validator rfc3986-validator isoduration uri-template
+
+
+pip uninstall -y mysql-connector-python
+
+pip uninstall -y h11 idna urllib3 sniffio
+
+pip uninstall -y beautifulsoup4 soupsieve defusedxml bleach
+
+pip uninstall -y loguru python-json-logger tenacity
+
+pip uninstall -y arrow asttokens executing stack-data pure-eval
+
+
+-----------------------------------------------------------------------------------------------------------------------------------------------
+
+!! MAKE SCRIPTS to remove packages installed in conda BASE without any environment, as they conflict.
+    Do an Analysis with help of conda commands or such and make custom scripts step by step, for your system. 
+
+# Make sure you're in base environment
+conda activate base
+
+# Remove potentially conflicting packages
+conda remove -n base --force pillow
+conda remove -n base --force pytorch torchvision torchaudio
+conda remove -n base --force notebook jupyter_core nbformat ipykernel
+conda remove -n base --force scipy numpy pandas matplotlib
+conda remove -n base --force scikit-learn
+conda remove -n base --force opencv
+
+# Clean conda cache
+conda clean --all -y
+
+# Verify removed packages
+conda list
+
+-----------------------------------------------------------------------------------------------------------------------------------------------
+
+CUDA:
+
+Carefully Uninstall CUDA related if already present. From Add or Remove Programs. Note that you have to remove VS Integration program as well if its present.
+
+Install CUDA 11.6.x, and CUDNN for CUDA 11.6.
+
+
+-------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+
+# -----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+``` Knowledge:
+OpenCV and opencv-contrib-python Versions: Both are now set to 4.5.5 and 4.5.5.64 respectively, ensuring compatibility.
+VTK Version: Set to 9.0.3, as confirmed in our previous discussions.
+CuPy and CUDA: Specified as cupy with cudatoolkit=11.6, matching the CUDA version required by PyTorch and CuPy.
+Channel Order: Retained the original order with pytorch, nvidia, conda-forge, and defaults while ensuring channel_priority is flexible.
+Python and PyTorch Versions: Python is set to 3.10, and PyTorch to 1.13.1, both compatible with CUDA 11.6 and aligned with the planned PyTorch3D version.
+
+Important Error:
+Invalid version: '-PKG-VERSION', indicates that the vtk package has an invalid version identifier, which disrupts the installation process. This issue often arises when vtk is installed via conda and then pip attempts to process it, leading to conflicts due to differing package management systems.
+
+
+PyVista is built on top of VTK, offering an intuitive Pythonic API that simplifies 3D mesh creation, visualization, and data handling. It makes complex rendering tasks more accessible, which would be beneficial as you explore 3D visualizations in your project.
+-> uses VTK's rendering engine, which can take advantage of GPU acceleration for visualization tasks. PyVista also provides a plotter interface, which can leverage GPU rendering when used with compatible hardware and VTK’s GPU capabilities.
+
+
+Visualize point clouds, meshes, and volumetric data.
+Generate interactive plots with ipyvtklink, enhancing usability within Jupyter Notebooks.
+Export 3D scenes to various formats for integration into other workflows.
+
+** Conda-forge packages, especially for compute-intensive libraries like PyVista and pymeshlab, are often built with compiler optimizations that enhance performance on various platforms. Trimesh also benefits from Conda’s optimized builds, especially when integrated with libraries for geometry processing, point cloud operations, and other memory-intensive tasks.
+
+
+
+VTK will remain flexible and pip-managed, reducing conflicts.
+Trimesh leverages Conda’s stable environment management.
+PyVista will have robust compatibility when installed through Conda, benefiting from Conda’s package management.
+
+```
+
+
+
+
+## If you want to use MAMBA FOR SPECIFIC VERSION. SPECIFIC PACKAGE? go for this.
+mamba remove opencv opencv-contrib-python opencv-python-headless opencv-contrib-python-headless libopencv py-opencv
+
+mamba install -c conda-forge opencv=4.5.4 opencv-contrib=4.5.4 libopencv=4.5.4 py-opencv=4.5.4
+
+
+
+
+
